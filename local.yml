@@ -9,5 +9,6 @@ services:
     ports:
       - "8001:8001"
     volumes:
-      - /你的音乐文件夹路径:/app/media:rw
+      - /vol1/1000/music:/app/media:rw
+      - ./data:/app/data
     restart: unless-stopped
