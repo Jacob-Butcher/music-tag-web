@@ -1,5 +1,5 @@
 # define an alias for the specfic python version used in this file.
-FROM python:3.11-slim-bookworm as python
+FROM python:3.11-slim as python
 
 # Use Tsinghua mirror for faster apt in China
 RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
