@@ -1,5 +1,5 @@
 # define an alias for the specfic python version used in this file.
-FROM python:3.11-slim as python
+FROM python:3.11-slim-bookworm as python
 
 # Python build stage
 FROM python as python-build-stage
@@ -31,11 +31,7 @@ ENV BUILD_ENV ${BUILD_ENVIRONMENT}
 
 WORKDIR ${APP_HOME}
 
-# Install required system dependencies
-RUN apt-get update && apt-get install --no-install-recommends -y \
-  gettext \
-  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-  && rm -rf /var/lib/apt/lists/*
+# No system packages needed - Python wheels cover everything
 
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
 # copy python dependency wheels from python-build-stage
