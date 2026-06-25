@@ -11,7 +11,7 @@ WORKDIR /app
 
 COPY ./requirements .
 RUN pip install --no-cache-dir -r base.txt \
-    -i https://pypi.doubanio.com/simple
+    -i https://mirrors.aliyun.com/pypi/simple/
 
 COPY ./compose/prod/django/start /start
 RUN chmod +x /start
