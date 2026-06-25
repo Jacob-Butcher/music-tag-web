@@ -10,7 +10,8 @@ ENV PYTHONDONTWRITEBYTECODE 1
 WORKDIR /app
 
 COPY ./requirements .
-RUN pip install --no-cache-dir -r base.txt
+RUN pip install --no-cache-dir -r base.txt \
+    -i https://pypi.doubanio.com/simple
 
 COPY ./compose/prod/django/start /start
 RUN chmod +x /start
