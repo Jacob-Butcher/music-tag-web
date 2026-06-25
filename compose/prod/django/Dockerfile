@@ -7,15 +7,8 @@ FROM python as python-build-stage
 ARG BUILD_ENVIRONMENT=prod
 # Install apt packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
-  # dependencies for building Python packages
   build-essential \
-  # psycopg2 dependencies
-  libpq-dev \
-  default-libmysqlclient-dev \
-  libffi-dev \
-  libjpeg-dev \
-  libxml2 \
-  libxslt1-dev
+  libffi-dev
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
@@ -40,13 +33,7 @@ WORKDIR ${APP_HOME}
 
 # Install required system dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y \
-  # psycopg2 dependencies
-  libpq-dev \
-  # Translations dependencies
   gettext \
-  default-libmysqlclient-dev \
-  nodejs\
-  # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
@@ -63,15 +50,6 @@ COPY ./compose/prod/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
 
-COPY ./compose/prod/django/celery/worker/start /start-celeryworker
-RUN sed -i 's/\r$//g' /start-celeryworker
-RUN chmod +x /start-celeryworker
-
-COPY ./compose/prod/django/celery/beat/start /start-celerybeat
-RUN sed -i 's/\r$//g' /start-celerybeat
-RUN chmod +x /start-celerybeat
-
 # copy application code to WORKDIR
 COPY . ${APP_HOME}
-RUN python setup_in_docker.py
 CMD ["/start"]
