@@ -10,6 +10,11 @@ class FileListSerializer(serializers.Serializer):
     sorted_fields = serializers.ListField(required=True)
 
 
+class BatchMusicId3Serializer(serializers.Serializer):
+    file_path = serializers.CharField(required=True)
+    file_names = serializers.ListField(required=True)
+
+
 class Id3Serializer(serializers.Serializer):
     file_path = serializers.CharField(required=True)
     file_name = serializers.CharField(required=True)

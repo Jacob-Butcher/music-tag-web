@@ -93,12 +93,18 @@ function panelStyle(flexVal) {
   return { width: flexVal, flexShrink: 0, overflow: 'auto' }
 }
 
-// -- Fast file list (no ID3 read) --
+const BATCH_SIZE = 30
+let batchTimer = null
+
+// -- Fast file list first, then batch-load ID3 --
 async function loadFiles() {
   try {
     const res = await api.fileList({ file_path: filePath.value, sorted_fields: [] })
     if (res.data) {
-      musicList.value = flattenTree(res.data)
+      const files = flattenTree(res.data)
+      musicList.value = files
+      // Start batch-loading metadata in background
+      startBatchLoad(files.map((f) => f.name))
     }
   } catch { message.error('加载文件失败') }
 }
@@ -117,10 +123,37 @@ function flattenTree(nodes) {
   return files
 }
 
+async function startBatchLoad(fileNames) {
+  if (batchTimer) clearTimeout(batchTimer)
+  let offset = 0
+  async function loadNextBatch() {
+    const batch = fileNames.slice(offset, offset + BATCH_SIZE)
+    if (!batch.length) return
+    try {
+      const res = await api.batchMusicId3({ file_path: filePath.value, file_names: batch })
+      if (res.data) {
+        // Merge metadata into musicList
+        const metaMap = {}
+        res.data.forEach((m) => { metaMap[m.file_name] = m })
+        musicList.value = musicList.value.map((row) => {
+          const meta = metaMap[row.name]
+          return meta ? { ...row, ...meta, _loaded: true } : row
+        })
+      }
+    } catch { /* retry later? skip for now */ }
+    offset += BATCH_SIZE
+    if (offset < fileNames.length) {
+      batchTimer = setTimeout(loadNextBatch, 50)
+    }
+  }
+  loadNextBatch()
+}
+
 function goUpDir() {
   const parts = filePath.value.replace(/\/$/, '').split('/')
   parts.pop()
   filePath.value = parts.join('/') || '/'
+  if (batchTimer) clearTimeout(batchTimer)
   loadFiles()
 }
 

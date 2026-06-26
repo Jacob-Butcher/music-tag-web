@@ -26,7 +26,7 @@
         size="small"
         max-height="calc(100vh - 200px)"
         virtual-scroll
-        @update:checked-row-keys="$emit('update:checkedKeys', $event)"
+        @update:checked-row-keys="(v) => $emit('update:checkedKeys', v)"
         :checked-row-keys="checkedKeys"
       />
 
@@ -39,6 +39,8 @@
 </template>
 
 <script setup>
+import { h } from 'vue'
+import { NImage } from 'naive-ui'
 import { ArrowUndo, ArrowDown, FolderOpenOutline } from '@vicons/ionicons5'
 
 defineProps({
@@ -48,6 +50,13 @@ defineProps({
 })
 
 const emit = defineEmits(['update:filePath', 'load-files', 'go-up', 'update:checkedKeys', 'row-click'])
+
+function formatDuration(sec) {
+  if (!sec) return ''
+  const m = Math.floor(sec / 60)
+  const s = Math.floor(sec % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
 
 function formatSize(bytes) {
   if (!bytes) return ''
@@ -61,8 +70,59 @@ function rowProps(row) {
 
 const columns = [
   { type: 'selection', width: 40 },
-  { title: '文件名', key: 'name', ellipsis: { tooltip: true } },
-  { title: '大小', key: 'size', width: 80, render: (row) => formatSize(row.size) },
-  { title: '修改时间', key: 'update_time', width: 160 },
+  {
+    title: '', key: 'artwork', width: 44,
+    render(row) {
+      if (!row._loaded) return h('div', { style: 'width:32px;height:32px;border-radius:4px;background:#f0f0f0;' })
+      if (!row.artwork) return h('div', { style: 'width:32px;height:32px;border-radius:4px;background:#f5f5f7;font-size:18px;text-align:center;line-height:32px;' }, '🎵')
+      return h(NImage, { src: row.artwork, width: 32, height: 32, style: 'border-radius:4px;object-fit:cover;', previewDisabled: true })
+    },
+  },
+  {
+    title: '标题', key: 'title', ellipsis: { tooltip: true }, width: 160,
+    render(row) {
+      if (row._loaded) return row.title || row.name
+      return row.name.split('.').slice(0, -1).join('.') || row.name
+    },
+  },
+  {
+    title: '艺术家', key: 'artist', ellipsis: { tooltip: true }, width: 120,
+    render(row) {
+      if (!row._loaded) return h('span', { style: 'color:#ccc;' }, '...')
+      return row.artist || '-'
+    },
+  },
+  {
+    title: '专辑', key: 'album', ellipsis: { tooltip: true }, width: 140,
+    render(row) {
+      if (!row._loaded) return h('span', { style: 'color:#ccc;' }, '...')
+      return row.album || '-'
+    },
+  },
+  {
+    title: '年份', key: 'year', width: 56,
+    render(row) {
+      if (!row._loaded) return ''
+      return row.year || ''
+    },
+  },
+  {
+    title: '歌词', key: 'lyrics', width: 48, align: 'center',
+    render(row) {
+      if (!row._loaded) return ''
+      return row.lyrics ? '✓' : ''
+    },
+  },
+  {
+    title: '时长', key: 'duration', width: 56,
+    render(row) {
+      if (!row._loaded) return ''
+      return formatDuration(row.duration)
+    },
+  },
+  {
+    title: '大小', key: 'size', width: 72,
+    render: (row) => formatSize(row.size),
+  },
 ]
 </script>
