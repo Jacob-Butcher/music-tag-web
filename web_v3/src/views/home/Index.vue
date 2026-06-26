@@ -26,18 +26,7 @@
         @save-tag="saveTag"
         @batch-save="batchSave"
         @show-batch-auto="showBatchAuto = true"
-        @search-resource="searchResource"
         @back="mobileView = 'file'"
-      />
-    </div>
-
-    <!-- Resource Search -->
-    <div v-show="!isMobile || mobileView === 'resource'" :style="panelStyle('450px')">
-      <ResourcePanel
-        :is-mobile="isMobile"
-        :results="searchResults"
-        @apply="applyResult"
-        @back="mobileView = 'edit'"
       />
     </div>
 
@@ -69,12 +58,10 @@ import api from '@/api'
 import { useMobile } from '@/composables/useMobile'
 import FileBrowser from '@/components/home/FileBrowser.vue'
 import TagEditor from '@/components/home/TagEditor.vue'
-import ResourcePanel from '@/components/home/ResourcePanel.vue'
 
 const message = useMessage()
 const { isMobile } = useMobile()
 
-// --- State ---
 const mobileView = ref('file')
 const filePath = ref('/app/media/')
 const musicList = ref([])
@@ -83,7 +70,6 @@ const selectedKey = ref('')
 const editing = ref({})
 const manualEdit = ref({})
 const saving = ref(false)
-const searchResults = ref([])
 const showBatchAuto = ref(false)
 const batchMode = ref('hard')
 const batchSources = ref([])
@@ -96,7 +82,6 @@ const sourceOptions = [
   { label: '酷狗', value: 'kugou' },
 ]
 
-// --- Layout ---
 const layoutStyle = computed(() =>
   isMobile.value
     ? { display: 'flex', flexDirection: 'column', height: '100%' }
@@ -113,16 +98,11 @@ function panelStyle(flexVal) {
   }
 }
 
-// --- File operations ---
 async function loadFiles() {
   try {
     const res = await api.batchMusicList({ file_path: filePath.value, sorted_fields: [] })
-    if (res.data) {
-      musicList.value = res.data
-    }
-  } catch {
-    message.error('加载文件失败')
-  }
+    if (res.data) musicList.value = res.data
+  } catch { message.error('加载文件失败') }
 }
 
 function goUpDir() {
@@ -139,7 +119,6 @@ function onRowClick(row) {
   if (isMobile.value) mobileView.value = 'edit'
 }
 
-// --- Tag operations ---
 async function saveTag() {
   saving.value = true
   try {
@@ -148,9 +127,7 @@ async function saveTag() {
     })
     message.success('修改成功')
     if (isMobile.value) mobileView.value = 'file'
-  } catch {
-    message.error('保存失败')
-  }
+  } catch { message.error('保存失败') }
   saving.value = false
 }
 
@@ -159,51 +136,19 @@ async function batchSave() {
     const selectData = musicList.value
       .filter((m) => checkedKeys.value.includes(m.file_name))
       .map((m) => ({ name: m.file_name, icon: 'icon-script-file' }))
-    await api.batchUpdateId3({
-      file_full_path: filePath.value,
-      select_data: selectData,
-      music_info: manualEdit.value,
-    })
+    await api.batchUpdateId3({ file_full_path: filePath.value, select_data: selectData, music_info: manualEdit.value })
     message.success('批量修改成功')
-  } catch {
-    message.error('修改失败')
-  }
-}
-
-// --- Resource search ---
-function searchResource() {
-  if (!editing.value.title) {
-    message.warning('请输入标题')
-    return
-  }
-  api.fetchId3Title({ title: editing.value.title, resource: 'netease' }).then((res) => {
-    searchResults.value = res.data || []
-    if (isMobile.value) mobileView.value = 'resource'
-  })
-}
-
-function applyResult(item) {
-  editing.value.title = item.name
-  editing.value.artist = item.artist
-  editing.value.album = item.album
-  editing.value.year = item.year
-  editing.value.artwork = item.album_img
-  if (isMobile.value) mobileView.value = 'edit'
+  } catch { message.error('修改失败') }
 }
 
 function doBatchAuto() {
   const selectData = musicList.value
     .filter((m) => checkedKeys.value.includes(m.file_name))
     .map((m) => ({ name: m.file_name, icon: 'icon-script-file' }))
-  api.batchAutoUpdateId3({
-    file_full_path: filePath.value,
-    select_data: selectData,
-    music_info: { select_mode: batchMode.value, source_list: batchSources.value },
-  })
+  api.batchAutoUpdateId3({ file_full_path: filePath.value, select_data: selectData, music_info: { select_mode: batchMode.value, source_list: batchSources.value } })
   message.success('任务已创建')
   showBatchAuto.value = false
 }
 
-// Bootstrap
 loadFiles()
 </script>

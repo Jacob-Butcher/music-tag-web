@@ -1,14 +1,12 @@
 <template>
   <n-card :bordered="false" size="small" style="border-radius: 12px;">
-    <!-- Mobile header with back + search -->
+    <!-- Mobile header with back -->
     <div v-if="isMobile" style="display: flex; align-items: center; padding: 4px 0 12px;">
       <n-button text @click="$emit('back')">
         <n-icon size="22"><ChevronBack /></n-icon>
       </n-button>
       <span style="flex:1; text-align:center; font-weight:600;">{{ editing.title || editing.filename || '编辑' }}</span>
-      <n-button text @click="$emit('search-resource')">
-        <n-icon size="22"><Search /></n-icon>
-      </n-button>
+      <span style="width: 22px;" />
     </div>
 
     <!-- Single file editing -->
@@ -46,7 +44,7 @@
 </template>
 
 <script setup>
-import { ChevronBack, Search } from '@vicons/ionicons5'
+import { ChevronBack } from '@vicons/ionicons5'
 
 defineProps({
   isMobile: { type: Boolean, default: false },
@@ -56,5 +54,5 @@ defineProps({
   saving: { type: Boolean, default: false },
 })
 
-defineEmits(['save-tag', 'batch-save', 'show-batch-auto', 'search-resource', 'back'])
+defineEmits(['save-tag', 'batch-save', 'show-batch-auto', 'back'])
 </script>
