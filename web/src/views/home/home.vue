@@ -1413,6 +1413,12 @@
         width: 90vw !important;
         border-radius: var(--radius-lg) !important;
     }
+    .bk-dialog-wrapper {
+        z-index: 1000 !important;
+    }
+    .bk-dialog-mask {
+        z-index: 999 !important;
+    }
 
     .bk-image {
         border-radius: 8px;
