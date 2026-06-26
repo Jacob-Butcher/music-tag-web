@@ -1,7 +1,6 @@
 from pathlib import Path
 import sys
 import os
-from datetime import timedelta
 
 # lib文件夹中手动导入的第三方库
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -111,7 +110,6 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
@@ -123,12 +121,6 @@ REST_FRAMEWORK = {
     "NON_FIELD_ERRORS_KEY": "params_error",
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'AUTH_HEADER_TYPES': ('JWT',),
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-}
 BASE_URL = "https://music.163.com/"
 REVERSE_PROXY_TYPE = "nginx"
 MEDIA_URL = '/media/'

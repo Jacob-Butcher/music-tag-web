@@ -6,7 +6,6 @@ from applications.task.urls import router as task_router
 from applications.user.urls import router as user_router
 from applications.subsonic.urls import router as subsonic_router
 from django.views import static
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -14,7 +13,6 @@ urlpatterns = [
     re_path(r"^api/", include(task_router.urls)),
     re_path(r"^rest/", include(subsonic_router.urls)),
     re_path(r"^user/", include(user_router.urls)),
-    re_path(r'^api/token/', TokenObtainPairView.as_view()),
     # nginx 处理了静态文件
     re_path(r'^static/(?P<path>.*)$', static.serve,
             {'document_root': settings.STATIC_ROOT}, name='static'),

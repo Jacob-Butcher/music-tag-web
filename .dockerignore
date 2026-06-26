@@ -1,16 +1,53 @@
-.editorconfig
+# Git
+.git
 .gitattributes
-.github
 .gitignore
 .gitlab-ci.yml
+.github
+
+# IDE / Editor
+.editorconfig
 .idea
+.vscode
+.claude
+
+# CI
+.travis.yml
 .pre-commit-config.yaml
 .readthedocs.yml
-.travis.yml
+
+# Python
 venv
-.git
-/web/
-/build/
-/media/
-db.sqlite3
+__pycache__
+*.pyc
+*.pyo
 local_settings.py
+db.sqlite3
+
+# Node
+node_modules
+web_v3/node_modules
+package-lock.json
+
+# Dev source (only need static/dist/ build output at runtime)
+web_v3/src
+web_v3/index.html
+web_v3/vite.config.js
+web_v3/package.json
+
+# Root screenshots / docs (not needed in image)
+*.jpg
+*.png
+*.md
+LICENSE
+images.txt
+
+# Runtime mounts
+media
+data
+
+# Docker / deploy
+compose
+local.yml
+.dockerignore
+Dockerfile
