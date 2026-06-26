@@ -48,7 +48,7 @@ async function submit() {
       const leftTamp = 7 * 24 * 60 * 60 * 1000 - passedTamp
       const leftTime = new Date()
       leftTime.setTime(leftTamp + curTamp)
-      document.cookie = 'AUTHORIZATION=' + escape('JWT ' + token) + ';expires=' + leftTime.toGMTString()
+      document.cookie = 'AUTHORIZATION=' + encodeURIComponent('JWT ' + token) + ';expires=' + leftTime.toGMTString()
       router.push('/')
     } else {
       message.error('登录失败：未获取到认证令牌')

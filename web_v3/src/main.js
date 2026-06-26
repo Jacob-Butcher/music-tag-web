@@ -15,7 +15,7 @@ app.config.globalProperties.$api = api
 app.config.globalProperties.$getCookie = (name) => {
   const reg = new RegExp('(^| )' + name + '=([^;]*)(;|$)')
   const arr = document.cookie.match(reg)
-  return arr ? unescape(arr[2]) : null
+  return arr ? decodeURIComponent(arr[2]) : null
 }
 app.config.globalProperties.$setCookie = (name, value, day) => {
   if (day > 0) {
@@ -26,9 +26,9 @@ app.config.globalProperties.$setCookie = (name, value, day) => {
     const leftTamp = 7 * 24 * 60 * 60 * 1000 - passedTamp
     const leftTime = new Date()
     leftTime.setTime(leftTamp + curTamp)
-    document.cookie = name + '=' + escape(value) + ';expires=' + leftTime.toGMTString()
+    document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + leftTime.toGMTString()
   } else {
-    document.cookie = name + '=' + escape(value)
+    document.cookie = name + '=' + encodeURIComponent(value)
   }
 }
 

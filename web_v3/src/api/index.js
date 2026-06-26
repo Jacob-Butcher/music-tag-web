@@ -21,7 +21,7 @@ http.interceptors.request.use((config) => {
       }
     }
   }
-  config.headers['AUTHORIZATION'] = cookieValue
+  config.headers['Authorization'] = cookieValue
   return config
 })
 

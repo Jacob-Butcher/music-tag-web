@@ -25,11 +25,13 @@
 
 <script setup>
 import { ref, computed, h, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCommonStore } from '@/stores/common'
 import { NIcon } from 'naive-ui'
 import { HomeOutline, PeopleOutline } from '@vicons/ionicons5'
 import api from '@/api'
 
+const router = useRouter()
 const store = useCommonStore()
 const userData = ref({})
 const activeMenu = ref('home')
