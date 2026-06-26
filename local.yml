@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: compose/local/django/Dockerfile
     container_name: music-tag-web
+    environment:
+      - SITE_LOGIN=false
     ports:
       - "8001:8001"
     volumes:
