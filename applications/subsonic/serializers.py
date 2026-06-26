@@ -75,7 +75,10 @@ class GetArtistsSerializer(serializers.Serializer):
 
 class GetArtistSerializer(serializers.Serializer):
     def to_representation(self, artist):
-        albums = artist.albums.all()
+        albums = artist.albums.annotate(
+            _song_count=Count("tracks"),
+            _duration=Sum("tracks__duration")
+        )
         payload = {
             "id": artist.pk,
             "name": artist.name,
@@ -91,8 +94,8 @@ class GetArtistSerializer(serializers.Serializer):
                 "name": album.name,
                 "artist": artist.name,
                 "created": to_subsonic_date(album.created_at),
-                "songCount": album.tracks.count(),
-                "duration": album.tracks.aggregate(duration_count=Sum("duration")).get("duration_count", 0)
+                "songCount": album._song_count,
+                "duration": album._duration or 0
             }
             if album.attachment_cover_id:
                 album_data["coverArt"] = f"al-{album.id}"
@@ -138,18 +141,18 @@ def get_track_data(track):
     return data
 
 
-def get_album2_data(album):
+def get_album2_data(album, annotated=False):
     """
     subsonic expects this kind of data:
+    If annotated=True, the album queryset must have _song_count and _duration annotations.
     """
-    # todo 优化 外建关联prefetch
     payload = {
         "id": album.id,
         "artistId": album.artist_id,
         "name": album.name,
         "artist": album.artist.name,
         "created": to_subsonic_date(album.created_at),
-        "duration": album.tracks.aggregate(duration_count=Sum("duration")).get("duration_count", 0),
+        "duration": album._duration if annotated else album.tracks.aggregate(duration_count=Sum("duration")).get("duration_count", 0),
         "playCount": 1,
     }
     if album.attachment_cover_id:
@@ -158,7 +161,7 @@ def get_album2_data(album):
         payload["genre"] = album.genre.name
     if album.max_year:
         payload["year"] = album.max_year
-    payload["songCount"] = album.tracks.count()
+    payload["songCount"] = album._song_count if annotated else album.tracks.count()
     return payload
 
 
@@ -196,7 +199,11 @@ def get_starred_tracks_data(favorites):
 
 
 def get_album_list2_data(albums):
-    return [get_album2_data(a) for a in albums]
+    albums = albums.annotate(
+        _song_count=Count("tracks"),
+        _duration=Sum("tracks__duration")
+    )
+    return [get_album2_data(a, annotated=True) for a in albums]
 
 
 def get_playlist_data(playlist):

@@ -25,17 +25,7 @@
         data() {
             return {
                 nav: {
-                    menuList: [
-                        {
-                            'name': 'home',
-                            'cnName': '首页',
-                            'to': '/',
-                            'icon': 'fa fa-home',
-                            'hasChild': false,
-                            'children': []
-                        }
-                       ],
-                    id: '', // 当前激活侧边栏
+                    id: '',
                     toggle: false
                 }
             }
@@ -43,10 +33,7 @@
         watch: {
             $route(val) {
                 this.nav.id = val.meta.hasOwnProperty('fatherName') ? val.meta.fatherName : val.name
-                console.log(this.nav.id)
             }
-        },
-        mounted() {
         },
         methods: {
             beforeNavChange(newId, oldId) {
@@ -61,9 +48,18 @@
         computed: {
             ...mapGetters(['getUserRole']),
             permNavList() {
-                console.log(this.getUserRole)
+                const items = [
+                    {
+                        'name': 'home',
+                        'cnName': '首页',
+                        'to': '/',
+                        'icon': 'fa fa-home',
+                        'hasChild': false,
+                        'children': []
+                    }
+                ]
                 if (this.getUserRole === 'admin') {
-                    this.nav.menuList.push( {
+                    items.push({
                         'name': 'user',
                         'cnName': '用户管理',
                         'to': '/user',
@@ -72,7 +68,7 @@
                         'children': []
                     })
                 }
-                return this.nav.menuList
+                return items
             }
         }
     }
