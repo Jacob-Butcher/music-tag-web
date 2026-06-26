@@ -1,7 +1,7 @@
 from pathlib import Path
 import sys
 import os
-import datetime
+from datetime import timedelta
 
 # lib文件夹中手动导入的第三方库
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,7 +14,7 @@ DEBUG = False
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_NAME = "django_vue_cli_csrftoken"
-CORS_ORIGIN_WHITELIST = [
+CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8080"
 ]
 
@@ -96,8 +96,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = False
 
 STATIC_URL = '/static/'
@@ -113,7 +111,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
@@ -125,14 +123,11 @@ REST_FRAMEWORK = {
     "NON_FIELD_ERRORS_KEY": "params_error",
 }
 
-JWT_AUTH = {
-    # 过期时间，生成的took七天之后不能使用
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7),
-    # 刷新时间 之后的token时间值
-    'JWT_ALLOW_REFRESH': True,
-    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
-    # 请求头携带的参数
-    'JWT_AUTH_HEADER_PREFIX': 'JWT'
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'AUTH_HEADER_TYPES': ('JWT',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 BASE_URL = "https://music.163.com/"
 REVERSE_PROXY_TYPE = "nginx"
