@@ -2,11 +2,8 @@
   <n-config-provider :theme-overrides="themeOverrides" :locale="zhCN" :date-locale="dateZhCN">
     <n-message-provider>
       <div style="height: 100vh; width: 100vw; overflow: hidden; background: #f5f5f7;">
-        <template v-if="$route.name !== 'login'">
-          <MobileShell v-if="isMobile" />
-          <DesktopShell v-else />
-        </template>
-        <router-view v-else />
+        <MobileShell v-if="isMobile" />
+        <DesktopShell v-else />
       </div>
     </n-message-provider>
   </n-config-provider>
