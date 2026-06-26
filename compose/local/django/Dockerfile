@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.9-slim as backend
 
 LABEL title="Music Tag Web | 音乐标签网页版"
 LABEL description="『音乐标签』Web版是一款可以编辑歌曲的标题，专辑，艺术家，歌词，封面等信息的应用程序"
@@ -17,5 +17,14 @@ COPY ./compose/local/django/start /start
 RUN chmod +x /start
 
 COPY . .
+
+# Build frontend with Node.js
+RUN apt-get update && apt-get install -y nodejs npm --no-install-recommends && \
+    cd web && \
+    npm install --legacy-peer-deps && \
+    NODE_OPTIONS=--openssl-legacy-provider npm run build && \
+    cd .. && \
+    apt-get purge -y nodejs npm && apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/* /root/.npm /web/node_modules
 
 CMD ["/start"]
