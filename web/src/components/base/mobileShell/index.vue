@@ -57,9 +57,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import { clearStore } from '../../../common/store.js'
-
 export default {
     data() {
         return {
@@ -69,7 +66,6 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['getUserRole']),
         userRole() {
             return this.$store.state.userRole
         },
