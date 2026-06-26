@@ -47,7 +47,7 @@ class ListJSONField(models.TextField):
 
 
 class Album(models.Model):
-    name = models.CharField("专辑名称", max_length=255, default='', null=False)
+    name = models.CharField("专辑名称", max_length=255, default='', null=False, db_index=True)
     artist = models.ForeignKey('Artist', on_delete=models.SET_NULL, null=True, related_name='albums',
                                db_constraint=False)
     all_artist_ids = ListJSONField(default=list)
@@ -235,7 +235,7 @@ class TrackFavorite(models.Model):
 
 class Folder(models.Model):
     name = models.CharField(max_length=256)
-    path = models.TextField()
+    path = models.TextField(db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_scan_time = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(default=datetime.now)
