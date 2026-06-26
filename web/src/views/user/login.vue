@@ -38,19 +38,10 @@
         methods: {
             submitLogin() {
                 this.$api.Task.login(this.formData).then((res) => {
-                    // SimpleJWT returns {access, refresh}, old JWT returned {token}
-                    let token = res.access || res.token
-                    if (res.data && res.data.access) {
-                        token = res.data.access
-                    }
-                    if (!token) {
-                        alert('登录失败：未获取到 token，响应格式：' + JSON.stringify(res))
-                        return
-                    }
+                    const token = res.access || res.token || (res.data && res.data.access)
+                    if (!token) return
                     this.setCookie('AUTHORIZATION', 'JWT ' + token, 7)
                     this.$router.push({name: 'home'})
-                }).catch((err) => {
-                    alert('登录请求失败：' + JSON.stringify(err))
                 })
             }
         }

@@ -55,7 +55,7 @@ onMounted(async () => {
   } catch { /* */ }
 })
 
-function handleMenu(key) { activeMenu.value = key; if (key === 'home') window.location.hash = '#/'; else window.location.hash = '#/' + key }
+function handleMenu(key) { activeMenu.value = key; router.push('/' + (key === 'home' ? '' : key)) }
 function handleUserAction(key) {
   if (key === 'admin') window.open('/admin/')
   if (key === 'manual') window.open('https://xiers-organization.gitbook.io/music-tag-web/')
