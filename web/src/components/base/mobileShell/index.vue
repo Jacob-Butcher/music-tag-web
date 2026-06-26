@@ -28,8 +28,8 @@
             </div>
         </div>
 
-        <!-- Right Drawer -->
-        <transition name="slide-right">
+        <!-- Bottom Sheet Drawer -->
+        <transition name="slide-up">
             <div class="mobile-drawer" v-if="drawerOpen">
                 <div class="drawer-backdrop" @click="drawerOpen = false"></div>
                 <div class="drawer-panel">
@@ -128,6 +128,19 @@ export default {
 </script>
 
 <style scoped>
+/* ===== Apple Design System Tokens ===== */
+:root {
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Helvetica Neue', sans-serif;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --text-primary: #1d1d1f;
+    --text-secondary: #86868b;
+    --accent: #0071e3;
+    --accent-pressed: #0060c9;
+    --separator: rgba(60, 60, 67, 0.08);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 .mobile-shell {
     position: fixed;
     top: 0;
@@ -136,75 +149,81 @@ export default {
     height: 100%;
     display: flex;
     flex-direction: column;
-    background: #f5f5f5;
+    background: var(--bg-secondary);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Header */
+/* ===== Header ===== */
 .mobile-header {
-    height: 44px;
-    flex: 0 0 44px;
+    height: 52px;
+    flex: 0 0 52px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
-    background: #fff;
-    border-bottom: 1px solid #dcdee5;
+    padding: 0 8px;
+    padding-top: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 0.5px solid var(--separator);
     z-index: 100;
 }
 
-.header-back {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    color: #3A84FF;
-    cursor: pointer;
-}
-
-.header-title {
-    font-size: 16px;
-    font-weight: 500;
-    color: #313238;
-    flex: 1;
-    text-align: center;
-}
-
+.header-back,
 .header-menu {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    color: #63656E;
+    color: var(--accent);
     cursor: pointer;
+    border-radius: 12px;
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* Content */
+.header-back:active,
+.header-menu:active {
+    background: rgba(0, 113, 227, 0.1);
+}
+
+.header-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    text-align: center;
+    letter-spacing: -0.02em;
+}
+
+/* ===== Content ===== */
 .mobile-content {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 50px;
+    padding-bottom: calc(50px + var(--safe-bottom));
 }
 
-/* Bottom Nav */
+/* ===== Bottom Tab Bar ===== */
 .mobile-bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 50px;
-    flex: 0 0 50px;
+    height: calc(50px + var(--safe-bottom));
     display: flex;
-    align-items: center;
-    background: #fff;
-    border-top: 1px solid #dcdee5;
+    align-items: flex-start;
+    padding-top: 4px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 0.5px solid var(--separator);
     z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-bottom: var(--safe-bottom);
 }
 
 .nav-item {
@@ -213,27 +232,31 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    font-size: 12px;
-    color: #979BA5;
+    height: 46px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s ease;
+    letter-spacing: 0.01em;
 }
 
 .nav-item i {
-    font-size: 20px;
-    margin-bottom: 2px;
+    font-size: 22px;
+    margin-bottom: 1px;
+    transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.nav-item:active i {
+    transform: scale(0.9);
 }
 
 .nav-item.active {
-    color: #3A84FF;
+    color: var(--accent);
 }
 
-.nav-item:active {
-    color: #3A84FF;
-}
-
-/* Drawer */
+/* ===== Bottom Sheet Drawer ===== */
 .mobile-drawer {
     position: fixed;
     top: 0;
@@ -249,84 +272,93 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .drawer-panel {
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 280px;
-    height: 100%;
+    bottom: 0;
+    left: 0;
+    width: 100%;
     background: #fff;
-    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
-    padding: 20px 0;
+    border-radius: 20px 20px 0 0;
+    padding: 16px 0 calc(20px + var(--safe-bottom));
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Pull indicator */
+.drawer-panel::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 5px;
+    background: rgba(60, 60, 67, 0.15);
+    border-radius: 3px;
+    margin: 0 auto 16px;
 }
 
 .drawer-user {
     display: flex;
     align-items: center;
-    padding: 16px 20px;
-    font-size: 16px;
-    color: #313238;
+    padding: 12px 24px 16px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .drawer-user i {
-    font-size: 28px;
-    margin-right: 12px;
-    color: #3A84FF;
+    font-size: 32px;
+    margin-right: 14px;
+    color: var(--text-secondary);
 }
 
 .drawer-divider {
-    height: 1px;
-    background: #f0f1f5;
-    margin: 8px 16px;
+    height: 0.5px;
+    background: var(--separator);
+    margin: 0 24px 8px;
 }
 
 .drawer-item {
     display: flex;
     align-items: center;
-    padding: 14px 20px;
-    font-size: 14px;
-    color: #63656E;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-primary);
     cursor: pointer;
+    border-radius: 12px;
+    margin: 0 8px;
     -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease;
 }
 
 .drawer-item i {
-    width: 20px;
-    margin-right: 12px;
-    font-size: 16px;
-    color: #979BA5;
+    width: 24px;
+    margin-right: 14px;
+    font-size: 18px;
+    color: var(--accent);
+    text-align: center;
 }
 
 .drawer-item:active {
-    background: #F0F1F5;
-    color: #3A84FF;
+    background: var(--bg-secondary);
 }
 
-/* Drawer transition */
-.slide-right-enter-active,
-.slide-right-leave-active {
-    transition: opacity 0.2s;
+/* ===== Drawer Animations ===== */
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: opacity 0.25s ease;
 }
-.slide-right-enter-active .drawer-panel,
-.slide-right-leave-active .drawer-panel {
-    transition: transform 0.2s;
+.slide-up-enter-active .drawer-panel,
+.slide-up-leave-active .drawer-panel {
+    transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-.slide-right-enter,
-.slide-right-leave-to {
+.slide-up-enter,
+.slide-up-leave-to {
     opacity: 0;
 }
-.slide-right-enter .drawer-panel,
-.slide-right-leave-to .drawer-panel {
-    transform: translateX(100%);
-}
-
-/* Safe area */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-    .mobile-bottom-nav {
-        padding-bottom: env(safe-area-inset-bottom);
-    }
+.slide-up-enter .drawer-panel,
+.slide-up-leave-to .drawer-panel {
+    transform: translateY(100%);
 }
 </style>

@@ -57,6 +57,12 @@
         background-color: rgba(255, 255, 255, .07)
     }
 
+    @media (max-width: 767px) {
+        html {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Helvetica Neue', sans-serif;
+        }
+    }
+
     ::-webkit-scrollbar-thumb {
         -webkit-border-radius: 10px;
         border-radius: 10px;

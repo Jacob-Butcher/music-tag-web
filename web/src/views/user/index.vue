@@ -185,9 +185,17 @@
     .table-wrapper {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        margin: 12px !important;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     .table-wrapper .bk-table {
         min-width: 600px;
+    }
+    .bk-button {
+        border-radius: 980px !important;
+        font-weight: 500 !important;
     }
 }
 </style>

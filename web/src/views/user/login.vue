@@ -230,10 +230,28 @@
     border-radius: 5px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
     .login-box {
-        width: 90%;
-        padding: 24px 20px;
+        width: 85%;
+        max-width: 400px;
+        padding: 32px 24px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    }
+    .login-box p:first-child {
+        font-size: 1.3rem;
+        margin-bottom: 24px;
+    }
+    .login-box form a {
+        border-radius: 980px;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+        height: 48px;
+        line-height: 48px;
+        padding: 0;
     }
 }
 </style>

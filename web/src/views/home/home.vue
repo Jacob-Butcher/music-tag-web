@@ -1228,40 +1228,65 @@
 }
 
 @media (max-width: 767px) {
+    :root {
+        --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Helvetica Neue', sans-serif;
+        --bg-card: #ffffff;
+        --bg-section: #f5f5f7;
+        --text-primary: #1d1d1f;
+        --text-secondary: #86868b;
+        --text-caption: #aeaeb2;
+        --accent: #0071e3;
+        --accent-green: #34c759;
+        --separator: rgba(60, 60, 67, 0.08);
+        --radius: 14px;
+        --radius-lg: 20px;
+    }
+
     .mobile-edit-header,
     .mobile-resource-header {
         display: flex;
         align-items: center;
-        height: 44px;
-        padding: 0 12px;
-        background: #fff;
-        border-bottom: 1px solid #dcdee5;
+        height: 50px;
+        padding: 0 4px;
+        padding-top: 6px;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 0.5px solid var(--separator);
         position: sticky;
         top: 0;
         z-index: 10;
     }
     .mobile-edit-header i,
     .mobile-resource-header i {
-        font-size: 18px;
-        color: #3A84FF;
-        width: 36px;
-        height: 36px;
+        font-size: 20px;
+        color: var(--accent);
+        width: 44px;
+        height: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        border-radius: 12px;
+        transition: background 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mobile-edit-header i:active,
+    .mobile-resource-header i:active {
+        background: rgba(0, 113, 227, 0.1);
     }
     .edit-header-title,
     .resource-header-title {
         flex: 1;
         text-align: center;
-        font-size: 14px;
-        font-weight: 500;
-        color: #313238;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        margin: 0 8px;
+        margin: 0 4px;
+        letter-spacing: -0.02em;
     }
 
     .file-section,
@@ -1269,19 +1294,19 @@
     .resource-section {
         width: 100%;
         min-width: auto;
-        height: calc(100vh - 44px - 50px - 44px);
+        height: calc(100vh - 52px - 50px - 50px);
         overflow-y: auto;
         border: none;
         border-radius: 0;
         margin: 0;
-        background: #fff;
+        background: var(--bg-section);
     }
 
     .file-section > div,
     .edit-section > div,
     .resource-section > div {
         margin: 0 !important;
-        padding: 0 12px;
+        padding: 16px;
         width: 100% !important;
         box-sizing: border-box;
     }
@@ -1290,52 +1315,121 @@
     .resource-section [style*="margin-left: 40px"] {
         width: 100% !important;
         margin-left: 0 !important;
-        padding: 0 12px;
+        padding: 16px;
         box-sizing: border-box;
     }
 
-    .edit-section .bk-select,
+    .edit-section .bk-select {
+        width: 100% !important;
+        max-width: 100%;
+    }
+
     .edit-section .bk-button {
         width: 100% !important;
         max-width: 100%;
+        border-radius: 980px !important;
+        height: 48px !important;
+        font-size: 16px !important;
+        font-weight: 500 !important;
+    }
+
+    /* Apple-style card for section containers */
+    .edit-section [style*="margin-left: 40px;width: 500px;"],
+    .edit-section [style*="margin-left: 40px;width: 500px;margin-top"] {
+        background: var(--bg-card) !important;
+        border-radius: var(--radius) !important;
+        padding: 20px 16px !important;
+        margin: 16px !important;
+        width: calc(100% - 32px) !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
     .edit-item {
         flex-direction: column;
         align-items: flex-start;
+        margin-bottom: 16px !important;
+        padding: 0 !important;
     }
-    .edit-item .label1 {
-        width: auto;
-        margin-bottom: 4px;
-    }
+    .edit-item .label1,
     .label1 {
         width: auto;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
     }
 
     .bk-input,
     .bk-textarea {
         width: 100% !important;
+        border-radius: 12px !important;
+        font-size: 16px !important;
     }
 
+    .edit-section .edit-section div[style*="display: flex;"] {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Song list grid - resource results */
     .parent {
-        grid-template-columns: repeat(4, 1fr);
-        font-size: 12px;
+        grid-template-columns: 36px 64px 1fr 1fr !important;
+        gap: 8px !important;
+        font-size: 13px;
         overflow-x: auto;
+        padding: 0 4px;
+        margin-bottom: 8px !important;
+    }
+    .parent .title2 {
+        display: none;
+    }
+    .parent .title2:first-child {
+        display: block;
     }
 
-    .music-item,
-    .bk-icon[style*="cursor: pointer"] {
-        min-height: 36px;
+    .music-item {
+        min-height: 44px;
         display: flex;
         align-items: center;
+        font-size: 14px;
+        padding: 8px 4px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .bk-icon[style*="cursor: pointer"] {
+        min-height: 44px;
+        min-width: 44px;
     }
 
     .dropdown-trigger-btn {
-        padding: 8px;
+        padding: 12px;
     }
 
     .bk-dialog {
-        width: 95vw !important;
+        width: 90vw !important;
+        border-radius: var(--radius-lg) !important;
+    }
+
+    .bk-image {
+        border-radius: 8px;
+    }
+
+    /* Apple-style save button */
+    .bk-button.bk-success {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        border-radius: 980px !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+    }
+    .bk-button.bk-success:active {
+        transform: scale(0.97);
+        filter: brightness(0.92);
+    }
+
+    /* Adjust tree nodes for touch */
+    .bk-tree-node {
+        min-height: 44px !important;
     }
 }
 
