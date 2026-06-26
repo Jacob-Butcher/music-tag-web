@@ -1,18 +1,6 @@
 <template>
     <div style="display: flex;flex-wrap: wrap;">
-        <!-- Section tabs (mobile only) -->
-        <div class="mobile-section-tabs" v-if="isMobile">
-            <div class="tab" :class="{ active: activeSection === 'file' }" @click="activeSection = 'file'">
-                <i class="fa fa-folder-open"></i><span>文件</span>
-            </div>
-            <div class="tab" :class="{ active: activeSection === 'edit' }" @click="activeSection = 'edit'">
-                <i class="fa fa-tag"></i><span>标签</span>
-            </div>
-            <div class="tab" :class="{ active: activeSection === 'resource' }" @click="activeSection = 'resource'">
-                <i class="fa fa-music"></i><span>资源</span>
-            </div>
-        </div>
-        <div class="file-section" v-show="!isMobile || activeSection === 'file'">
+        <div class="file-section" v-show="!isMobile || mobileView === 'file'">
             <div style="width: 95%;margin-top: 20px;margin-left: 10px;">
                 <div style="display: flex;align-items: center;">
                     <bk-icon type="arrows-left-shape" @click="backDir" style="cursor: pointer;"></bk-icon>
@@ -61,7 +49,13 @@
                 </transition>
             </div>
         </div>
-        <div class="edit-section" v-show="!isMobile || activeSection === 'edit'">
+        <div class="edit-section" v-show="!isMobile || mobileView === 'edit'">
+            <!-- Mobile editor header -->
+            <div class="mobile-edit-header" v-if="isMobile">
+                <i class="fa fa-chevron-left" @click="mobileView = 'file'"></i>
+                <span class="edit-header-title">{{ musicInfo.title || fileName || '编辑标签' }}</span>
+                <i class="fa fa-search" @click="searchResource"></i>
+            </div>
             <transition name="bk-slide-fade-left">
                 <div style="margin-left: 40px;width: 500px;margin-top: 20px;"
                     v-show="musicInfo.title && checkedIds.length === 0">
@@ -431,13 +425,21 @@
                 </div>
             </transition>
         </div>
-        <div class="resource-section" v-show="!isMobile || activeSection === 'resource'">
+        <div class="resource-section" v-show="!isMobile || mobileView === 'resource'">
+            <!-- Mobile resource header -->
+            <div class="mobile-resource-header" v-if="isMobile">
+                <i class="fa fa-chevron-left" @click="mobileView = 'edit'"></i>
+                <span class="resource-header-title">搜索结果 — {{ musicInfo.title }}</span>
+                <span style="width: 36px;"></span>
+            </div>
             <transition name="bk-slide-fade-left">
                 <div
                     style="display: flex;flex-direction: column;margin-top: 20px;flex: 1;margin-right: 20px;margin-left: 20px;"
-                    v-show="fadeShowDetail">
-                    <div v-if="SongList.length === 0">
-                        <span style="margin-left: 30%;margin-top: 30%;">暂无歌曲信息</span>
+                    v-show="fadeShowDetail || !isMobile">
+                    <div v-if="SongList.length === 0" style="padding: 40px 20px;text-align: center;color: #979BA5;">
+                        <i class="fa fa-music" style="font-size: 40px;display:block;margin-bottom:12px;"></i>
+                        <span v-if="!isMobile">暂无歌曲信息</span>
+                        <span v-else>点击右侧 <i class="fa fa-search" style="font-size:16px;"></i> 搜索资源</span>
                     </div>
                     <div v-else>
                         <div class="parent">
@@ -451,7 +453,7 @@
                         </div>
                         <div v-for="(item,index) in SongList" :key="index" style="margin-bottom: 10px;" class="parent">
                             <bk-icon type="arrows-left-shape" @click="copyAll(item)"
-                                style="margin-right: 5px;cursor: pointer;"></bk-icon>
+                                :style="'margin-right: 5px;cursor: pointer;' + (isMobile ? 'font-size:24px;padding:6px;' : '')"></bk-icon>
                             <div v-if="resource === 'smart_tag'">
                                 <bk-badge class="mr40" :theme="'warning'" :val="item.score" radius="20%">
                                     <bk-image fit="contain" :src="item.album_img"
@@ -621,7 +623,7 @@
         mixins: [responsiveMixin],
         data() {
             return {
-                activeSection: 'file',
+                mobileView: 'file',
                 files1: [],
                 uploadUrl: '/api/upload_image/',
                 uploadHeader: [
@@ -853,6 +855,9 @@
                                     url: this.musicInfo.artwork
                                 }
                             ]
+                            if (this.isMobile) {
+                                this.mobileView = 'edit'
+                            }
                         } else {
                             this.$cwMessage(res.message, 'error')
                         }
@@ -929,6 +934,9 @@
                 } else {
                     this.musicInfo[k] = v
                 }
+                if (this.isMobile && k !== 'lyric') {
+                    this.mobileView = 'edit'
+                }
             },
             copyAll(item) {
                 this.handleCopy('title', item.name)
@@ -956,8 +964,14 @@
                     }).then((res) => {
                         this.fadeShowDetail = true
                         this.SongList = res.data
+                        if (this.isMobile) {
+                            this.mobileView = 'resource'
+                        }
                     })
                 }
+            },
+            searchResource() {
+                this.toggleLock('title')
             },
             translation() {
                 if (!this.musicInfo.lyrics) {
@@ -1005,6 +1019,9 @@
                     if (res.result) {
                         this.$cwMessage('修改成功', 'success')
                         this.$store.commit('setHasMsg', true)
+                        if (this.isMobile) {
+                            this.mobileView = 'file'
+                        }
                     } else {
                         this.$cwMessage('修改失败', 'error')
                     }
@@ -1027,6 +1044,9 @@
                                 console.log(res)
                                 if (res.result) {
                                     this.$cwMessage('修改成功', 'success')
+                                    if (this.isMobile) {
+                                        this.mobileView = 'file'
+                                    }
                                 }
                             })
                             return true
@@ -1201,40 +1221,47 @@
     cursor: pointer;
 }
 
-/* Section tabs (mobile only) */
-.mobile-section-tabs {
+/* Mobile view headers */
+.mobile-edit-header,
+.mobile-resource-header {
     display: none;
 }
 
 @media (max-width: 767px) {
-    .mobile-section-tabs {
+    .mobile-edit-header,
+    .mobile-resource-header {
         display: flex;
-        width: 100%;
+        align-items: center;
         height: 44px;
+        padding: 0 12px;
         background: #fff;
         border-bottom: 1px solid #dcdee5;
         position: sticky;
         top: 0;
         z-index: 10;
     }
-    .mobile-section-tabs .tab {
-        flex: 1;
+    .mobile-edit-header i,
+    .mobile-resource-header i {
+        font-size: 18px;
+        color: #3A84FF;
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
-        color: #979BA5;
         cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-        border-bottom: 2px solid transparent;
     }
-    .mobile-section-tabs .tab i {
-        margin-right: 4px;
-        font-size: 16px;
-    }
-    .mobile-section-tabs .tab.active {
-        color: #3A84FF;
-        border-bottom-color: #3A84FF;
+    .edit-header-title,
+    .resource-header-title {
+        flex: 1;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 500;
+        color: #313238;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin: 0 8px;
     }
 
     .file-section,
