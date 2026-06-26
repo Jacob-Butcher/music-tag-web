@@ -46,8 +46,12 @@ images.txt
 media
 data
 
-# Docker / deploy
-compose
+# Docker / deploy (keep start script needed by Dockerfile)
+compose/local/nginx
+compose/local/django/celery
+compose/local/django/Dockerfile
+compose/prod
 local.yml
 .dockerignore
 Dockerfile
+!compose/local/django/start
