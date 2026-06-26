@@ -10,7 +10,7 @@
             </span>
         </div>
         <div style="display: flex;justify-content: center;align-items: center;">
-            <bk-popover theme="light navigation-message" :arrow="false" offset="-150, 5" trigger="mouseenter"
+            <bk-popover theme="light navigation-message" :arrow="false" offset="-150, 5" trigger="click"
                 :tippy-options="{ 'hideOnClick': false }">
                 <div class="header-mind">
                     <bk-badge class="" :theme="'danger'" :max="99" :val="msgList.length" :visible="msgList.length > 0">
@@ -447,5 +447,12 @@
     border-radius: 0;
     -webkit-box-shadow: none;
     box-shadow: none;
+}
+
+@media (max-width: 480px) {
+    .monitor-navigation-message {
+        width: 90vw;
+        max-width: 360px;
+    }
 }
 </style>

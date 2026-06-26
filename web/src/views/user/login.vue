@@ -229,4 +229,11 @@
     color: #aaa;
     border-radius: 5px;
 }
+
+@media (max-width: 480px) {
+    .login-box {
+        width: 90%;
+        padding: 24px 20px;
+    }
+}
 </style>

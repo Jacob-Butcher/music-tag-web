@@ -80,4 +80,10 @@
     background-color: #ffffff !important;
     border-bottom: 1px solid #dcdee5;
 }
+
+@media (max-width: 767px) {
+    .bk-wrapper {
+        display: none;
+    }
+}
 </style>

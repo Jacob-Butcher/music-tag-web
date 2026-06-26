@@ -1,6 +1,18 @@
 <template>
     <div style="display: flex;flex-wrap: wrap;">
-        <div class="file-section">
+        <!-- Section tabs (mobile only) -->
+        <div class="mobile-section-tabs" v-if="isMobile">
+            <div class="tab" :class="{ active: activeSection === 'file' }" @click="activeSection = 'file'">
+                <i class="fa fa-folder-open"></i><span>文件</span>
+            </div>
+            <div class="tab" :class="{ active: activeSection === 'edit' }" @click="activeSection = 'edit'">
+                <i class="fa fa-tag"></i><span>标签</span>
+            </div>
+            <div class="tab" :class="{ active: activeSection === 'resource' }" @click="activeSection = 'resource'">
+                <i class="fa fa-music"></i><span>资源</span>
+            </div>
+        </div>
+        <div class="file-section" v-show="!isMobile || activeSection === 'file'">
             <div style="width: 95%;margin-top: 20px;margin-left: 10px;">
                 <div style="display: flex;align-items: center;">
                     <bk-icon type="arrows-left-shape" @click="backDir" style="cursor: pointer;"></bk-icon>
@@ -49,7 +61,7 @@
                 </transition>
             </div>
         </div>
-        <div class="edit-section">
+        <div class="edit-section" v-show="!isMobile || activeSection === 'edit'">
             <transition name="bk-slide-fade-left">
                 <div style="margin-left: 40px;width: 500px;margin-top: 20px;"
                     v-show="musicInfo.title && checkedIds.length === 0">
@@ -419,7 +431,7 @@
                 </div>
             </transition>
         </div>
-        <div class="resource-section">
+        <div class="resource-section" v-show="!isMobile || activeSection === 'resource'">
             <transition name="bk-slide-fade-left">
                 <div
                     style="display: flex;flex-direction: column;margin-top: 20px;flex: 1;margin-right: 20px;margin-left: 20px;"
@@ -603,10 +615,13 @@
 </template>
 <script>
     import {mapGetters} from 'vuex'
+    import responsiveMixin from '@/common/responsive'
 
     export default {
+        mixins: [responsiveMixin],
         data() {
             return {
+                activeSection: 'file',
                 files1: [],
                 uploadUrl: '/api/upload_image/',
                 uploadHeader: [
@@ -1186,69 +1201,114 @@
     cursor: pointer;
 }
 
-@media (max-width: 500px) {
-    /* 在屏幕宽度小于400像素时应用的CSS规则 */
-    .file-section {
-        background: #fff;
-        height: calc(100vh - 75px);
-        overflow: scroll;
-        width: 100vh;
-        border: 1px solid #173769;
-        margin: 10px 0 10px 10px;
-        border-radius: 20px;
-    }
-    .edit-section {
-        background: #fff;
-        height: calc(100vh - 75px);
-        overflow: scroll;
-        width: 100vh;
-        border: 1px solid #173769;
-        margin: 10px 10px 10px 10px;
-        border-radius: 20px;
-    }
-
-    .resource-section {
-        background: #fff;
-        height: calc(100vh - 75px);
-        width: 100vh;
-        flex: 1;
-        overflow: scroll;
-        border: 1px solid #173769;
-        margin: 10px 10px 10px 0;
-        border-radius: 20px;
-    }
+/* Section tabs (mobile only) */
+.mobile-section-tabs {
+    display: none;
 }
 
-@media (min-width: 400px) {
-    /* 在屏幕宽度大于400像素时应用的CSS规则 */
-    .file-section {
+@media (max-width: 767px) {
+    .mobile-section-tabs {
+        display: flex;
+        width: 100%;
+        height: 44px;
         background: #fff;
-        height: calc(100vh - 75px);
-        overflow: scroll;
-        min-width: 400px;
-        border: 1px solid #173769;
-        margin: 10px 0 10px 10px;
-        border-radius: 20px;
+        border-bottom: 1px solid #dcdee5;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
-
-    .edit-section {
-        background: #fff;
-        height: calc(100vh - 75px);
-        overflow: scroll;
-        border: 1px solid #173769;
-        margin: 10px 10px 10px 10px;
-        border-radius: 20px;
-    }
-
-    .resource-section {
-        background: #fff;
-        height: calc(100vh - 75px);
-        min-width: 400px;
+    .mobile-section-tabs .tab {
         flex: 1;
-        overflow: scroll;
-        border: 1px solid #173769;
-        margin: 10px 10px 10px 0;
-        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        color: #979BA5;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        border-bottom: 2px solid transparent;
+    }
+    .mobile-section-tabs .tab i {
+        margin-right: 4px;
+        font-size: 16px;
+    }
+    .mobile-section-tabs .tab.active {
+        color: #3A84FF;
+        border-bottom-color: #3A84FF;
+    }
+
+    .file-section,
+    .edit-section,
+    .resource-section {
+        width: 100%;
+        min-width: auto;
+        height: calc(100vh - 44px - 50px - 44px);
+        overflow-y: auto;
+        border: none;
+        border-radius: 0;
+        margin: 0;
+        background: #fff;
+    }
+
+    .file-section > div,
+    .edit-section > div,
+    .resource-section > div {
+        margin: 0 !important;
+        padding: 0 12px;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .edit-section [style*="width: 500px"],
+    .resource-section [style*="margin-left: 40px"] {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding: 0 12px;
+        box-sizing: border-box;
+    }
+
+    .edit-section .bk-select,
+    .edit-section .bk-button {
+        width: 100% !important;
+        max-width: 100%;
+    }
+
+    .edit-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .edit-item .label1 {
+        width: auto;
+        margin-bottom: 4px;
+    }
+    .label1 {
+        width: auto;
+    }
+
+    .bk-input,
+    .bk-textarea {
+        width: 100% !important;
+    }
+
+    .parent {
+        grid-template-columns: repeat(4, 1fr);
+        font-size: 12px;
+        overflow-x: auto;
+    }
+
+    .music-item,
+    .bk-icon[style*="cursor: pointer"] {
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+    }
+
+    .dropdown-trigger-btn {
+        padding: 8px;
+    }
+
+    .bk-dialog {
+        width: 95vw !important;
     }
 }
 

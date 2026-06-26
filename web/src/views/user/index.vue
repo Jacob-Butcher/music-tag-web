@@ -6,7 +6,7 @@
                     新增用户
                 </bk-button>
             </div>
-            <div style="margin: 20px;">
+            <div class="table-wrapper" style="margin: 20px;">
                 <bk-table
                     :data="data"
                     :size="size"
@@ -179,5 +179,15 @@
     text-decoration: underline;
     text-decoration-style: dashed;
     text-underline-position: under;
+}
+
+@media (max-width: 767px) {
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .table-wrapper .bk-table {
+        min-width: 600px;
+    }
 }
 </style>
