@@ -11,7 +11,15 @@
 
     <!-- Single file editing -->
     <template v-if="checkedKeys.length === 0">
-      <n-space vertical :size="12">
+      <n-space vertical :size="10">
+        <!-- File info bar -->
+        <div style="display:flex;flex-wrap:wrap;gap:4px 16px;padding:8px 12px;background:#f5f5f7;border-radius:8px;font-size:12px;color:#666;">
+          <span>📄 {{ editing.filename }}</span>
+          <span v-if="editing.duration">⏱ {{ fmtDuration(editing.duration) }}</span>
+          <span v-if="editing.bit_rate">📊 {{ formatBitrate(editing.bit_rate) }}</span>
+          <span v-if="editing.size">💾 {{ formatSize(editing.size) }}</span>
+          <span v-if="editing.tracknumber">🔢 #{{ editing.tracknumber }}</span>
+        </div>
         <n-input v-model:value="editing.title" placeholder="标题" />
         <n-input v-model:value="editing.artist" placeholder="艺术家" />
         <n-input v-model:value="editing.album" placeholder="专辑" />
@@ -55,4 +63,22 @@ defineProps({
 })
 
 defineEmits(['save-tag', 'batch-save', 'show-batch-auto', 'back'])
+
+function fmtDuration(sec) {
+  if (!sec) return ''
+  const m = Math.floor(sec / 60)
+  const s = Math.floor(sec % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+function formatBitrate(bps) {
+  if (!bps) return ''
+  return Math.round(bps / 1000) + ' kbps'
+}
+
+function formatSize(bytes) {
+  if (!bytes) return ''
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / 1048576).toFixed(1) + ' MB'
+}
 </script>
