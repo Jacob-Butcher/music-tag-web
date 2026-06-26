@@ -904,7 +904,11 @@
                         }
                     }
                 }
-                console.log(this.checkedIds)
+                if (this.isMobile && this.checkedIds.length > 0) {
+                    this.mobileView = 'edit'
+                } else if (this.isMobile && this.checkedIds.length === 0 && !this.musicInfo.title) {
+                    this.mobileView = 'file'
+                }
             },
             handleCopy(k, v) {
                 if (k === 'lyric') {
