@@ -17,7 +17,7 @@
     </div>
 
     <!-- Tag Editor: desktop only shows when file selected, mobile uses push nav -->
-    <div v-show="(isMobile && mobileView === 'edit') || (!isMobile && hasSelection)" :style="panelStyle('1')">
+    <div v-show="(isMobile && mobileView === 'edit') || (!isMobile && hasSelection)" :style="panelStyle('420px')">
       <TagEditor
         :is-mobile="isMobile"
         :checked-keys="checkedKeys"
