@@ -44,11 +44,9 @@
 </template>
 
 <script setup>
-import { h } from 'vue'
-import { NButton } from 'naive-ui'
 import { ArrowUndo, ArrowDown, FolderOpenOutline } from '@vicons/ionicons5'
 
-const props = defineProps({
+defineProps({
   filePath: { type: String, required: true },
   musicList: { type: Array, default: () => [] },
   checkedKeys: { type: Array, default: () => [] },
