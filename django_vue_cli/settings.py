@@ -7,11 +7,11 @@ import datetime
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(1, os.path.join(os.getcwd(), 'lib'))
 
-SECRET_KEY = 'django-insecure-u5_r=pekio0@zt!y(kgbufuosb9mddu8*qeejkzj@=7uyvb392'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-u5_r=pekio0@zt!y(kgbufuosb9mddu8*qeejkzj@=7uyvb392')
 
 DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_NAME = "django_vue_cli_csrftoken"
 CORS_ORIGIN_WHITELIST = [
