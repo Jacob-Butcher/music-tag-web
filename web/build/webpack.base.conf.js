@@ -24,11 +24,6 @@ const createLintingRule = () => ({
 module.exports = {
     context: path.resolve(__dirname, '../'),
     plugins: [
-        new webpack.ProvidePlugin({
-            $: "jquery",
-            jQuery: "jquery",
-            "windows.jQuery": "jquery"
-        }),
         // new MonacoWebpackPlugin({
         //     languages: ['shell', 'bat', 'perl', 'python', 'powershell', 'json'],
         //     publicPath: './static/monaco-editor'

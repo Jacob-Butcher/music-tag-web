@@ -30,7 +30,7 @@
                             'name': 'home',
                             'cnName': '首页',
                             'to': '/',
-                            'icon': 'iconfont icon-mianxingtubiao-shouye',
+                            'icon': 'fa fa-home',
                             'hasChild': false,
                             'children': []
                         }
@@ -67,7 +67,7 @@
                         'name': 'user',
                         'cnName': '用户管理',
                         'to': '/user',
-                        'icon': 'iconfont icon-mianxingtubiao-shouye',
+                        'icon': 'fa fa-home',
                         'hasChild': false,
                         'children': []
                     })

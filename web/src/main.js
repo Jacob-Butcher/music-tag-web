@@ -13,8 +13,6 @@ import store from './vuex'
 import axios from 'axios'
 // 引用API文件
 import api from './api/index'
-// filter统一引入
-import './fiter/index.js'
 import cwMessage from './common/message'
 // vuex
 import '@/vuex/index' // 全局
@@ -25,9 +23,6 @@ import {hasPermission} from './promission.js' // 路由后台获取
 import 'font-awesome/css/font-awesome.min.css'
 // 引入lodash
 // import lodash from 'lodash'
-// 引入自定义icon 图标
-import './assets/custom_icon/iconfont.css'
-// import '../static/cw-icon/iconfont.css'
 // import 'echarts/dist/extension/dataTool'
 import VeeValidate, {Validator} from 'vee-validate'
 
