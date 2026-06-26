@@ -9,6 +9,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src')
     }
   },
+  base: '/static/dist/',
   build: {
     outDir: '../static/dist',
     assetsDir: 'assets',
