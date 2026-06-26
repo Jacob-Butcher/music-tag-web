@@ -25,7 +25,7 @@ from component.drf.viewsets import GenericViewSet
 @method_decorator(gzip_page, name="dispatch")
 class TaskViewSets(GenericViewSet):
     def get_serializer_class(self):
-        if self.action == "file_list":
+        if self.action in ("file_list", "batch_music_list"):
             return FileListSerializer
         elif self.action == "music_id3":
             return Id3Serializer
@@ -123,6 +123,41 @@ class TaskViewSets(GenericViewSet):
             }
         ]
         return self.success_response(data=res_data)
+
+    @action(methods=['POST'], detail=False)
+    def batch_music_list(self, request, *args, **kwargs):
+        """批量获取文件夹下所有音乐文件元数据"""
+        validate_data = self.is_validated_data(request.data)
+        file_path = validate_data['file_path']
+        file_path = file_path.rstrip('/')
+        try:
+            entries = os.scandir(file_path)
+        except FileNotFoundError:
+            return self.failure_response(msg="文件夹不存在")
+        result = []
+        for entry in entries:
+            if entry.is_dir():
+                continue
+            name = entry.name
+            file_type = name.split(".")[-1].lower() if "." in name else ""
+            if file_type not in ALLOW_TYPE:
+                continue
+            full_path = f"{file_path}/{name}"
+            try:
+                info = MusicIDS(full_path).to_dict()
+                info["file_name"] = name
+                info["file_path"] = file_path
+                info["file_size"] = entry.stat().st_size
+                info["update_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry.stat().st_mtime))
+            except Exception:
+                info = {
+                    "title": name, "artist": "", "album": "", "year": "", "duration": 0,
+                    "file_name": name, "file_path": file_path,
+                    "file_size": entry.stat().st_size,
+                    "update_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry.stat().st_mtime)),
+                }
+            result.append(info)
+        return self.success_response(data=result)
 
     @action(methods=['POST'], detail=False)
     def music_id3(self, request, *args, **kwargs):

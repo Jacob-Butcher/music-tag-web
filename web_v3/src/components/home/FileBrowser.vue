@@ -18,17 +18,20 @@
         </n-button>
       </n-space>
 
-      <!-- File tree -->
-      <n-tree
-        v-if="treeData.length"
-        :data="treeData"
-        :node-key="(node) => node.key"
-        :virtual-scroll="false"
-        block-line
-        @update:selected-keys="(keys) => $emit('node-select', keys)"
-        @update:checked-keys="(keys) => $emit('node-check', keys)"
-        checkable
-        :checked-keys="checkedKeys"
+      <!-- Music table -->
+      <n-data-table
+        v-if="musicList.length"
+        :columns="columns"
+        :data="musicList"
+        :row-key="(row) => row.file_name"
+        :row-props="rowProps"
+        :single-line="false"
+        :bordered="false"
+        size="small"
+        max-height="calc(100vh - 200px)"
+        virtual-scroll
+        @update:checked-row-keys="$emit('update:checkedKeys', $event)"
+        :checked-row-keys="checkedKeys"
       />
 
       <!-- Empty state -->
@@ -41,13 +44,94 @@
 </template>
 
 <script setup>
+import { h } from 'vue'
+import { NButton } from 'naive-ui'
 import { ArrowUndo, ArrowDown, FolderOpenOutline } from '@vicons/ionicons5'
 
-defineProps({
+const props = defineProps({
   filePath: { type: String, required: true },
-  treeData: { type: Array, default: () => [] },
+  musicList: { type: Array, default: () => [] },
   checkedKeys: { type: Array, default: () => [] },
+  selectedKey: { type: String, default: '' },
 })
 
-defineEmits(['update:filePath', 'load-files', 'go-up', 'node-select', 'node-check'])
+const emit = defineEmits(['update:filePath', 'load-files', 'go-up', 'update:checkedKeys', 'row-click'])
+
+function formatDuration(sec) {
+  if (!sec) return ''
+  const m = Math.floor(sec / 60)
+  const s = Math.floor(sec % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+function formatSize(bytes) {
+  if (!bytes) return ''
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / 1048576).toFixed(1) + ' MB'
+}
+
+function rowProps(row) {
+  return {
+    style: 'cursor: pointer;',
+    onClick: () => emit('row-click', row),
+  }
+}
+
+const columns = [
+  {
+    type: 'selection',
+    width: 40,
+  },
+  {
+    title: '标题',
+    key: 'title',
+    ellipsis: { tooltip: true },
+    width: 180,
+    render(row) {
+      return row.title || row.file_name
+    },
+  },
+  {
+    title: '艺术家',
+    key: 'artist',
+    ellipsis: { tooltip: true },
+    width: 130,
+    render(row) {
+      return row.artist || '-'
+    },
+  },
+  {
+    title: '专辑',
+    key: 'album',
+    ellipsis: { tooltip: true },
+    width: 150,
+    render(row) {
+      return row.album || '-'
+    },
+  },
+  {
+    title: '年份',
+    key: 'year',
+    width: 60,
+    render(row) {
+      return row.year || ''
+    },
+  },
+  {
+    title: '时长',
+    key: 'duration',
+    width: 60,
+    render(row) {
+      return formatDuration(row.duration)
+    },
+  },
+  {
+    title: '大小',
+    key: 'file_size',
+    width: 70,
+    render(row) {
+      return formatSize(row.file_size)
+    },
+  },
+]
 </script>

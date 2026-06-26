@@ -1,16 +1,17 @@
 <template>
   <div :style="layoutStyle">
     <!-- File Browser -->
-    <div v-show="!isMobile || mobileView === 'file'" :style="panelStyle('380px')">
+    <div v-show="!isMobile || mobileView === 'file'" :style="panelStyle('480px')">
       <FileBrowser
         :file-path="filePath"
-        :tree-data="treeData"
+        :music-list="musicList"
         :checked-keys="checkedKeys"
+        :selected-key="selectedKey"
         @update:file-path="(v) => filePath = v"
         @load-files="loadFiles"
         @go-up="goUpDir"
-        @node-select="onNodeSelect"
-        @node-check="onNodeCheck"
+        @update:checked-keys="(v) => checkedKeys = v"
+        @row-click="onRowClick"
       />
     </div>
 
@@ -76,8 +77,9 @@ const { isMobile } = useMobile()
 // --- State ---
 const mobileView = ref('file')
 const filePath = ref('/app/media/')
-const treeData = ref([])
+const musicList = ref([])
 const checkedKeys = ref([])
+const selectedKey = ref('')
 const editing = ref({})
 const manualEdit = ref({})
 const saving = ref(false)
@@ -114,22 +116,12 @@ function panelStyle(flexVal) {
 // --- File operations ---
 async function loadFiles() {
   try {
-    const res = await api.fileList({ file_path: filePath.value, sorted_fields: [] })
+    const res = await api.batchMusicList({ file_path: filePath.value, sorted_fields: [] })
     if (res.data) {
-      treeData.value = res.data.map((node, i) => formatNode(node, `${i}-`))
+      musicList.value = res.data
     }
   } catch {
     message.error('加载文件失败')
-  }
-}
-
-function formatNode(node, prefix) {
-  const key = prefix + (node.name || '')
-  return {
-    key,
-    label: node.title || node.name,
-    isLeaf: node.icon !== 'icon-folder',
-    ...(node.children ? { children: node.children.map((c, i) => formatNode(c, key + '-' + i)) } : {}),
   }
 }
 
@@ -140,30 +132,11 @@ function goUpDir() {
   loadFiles()
 }
 
-function onNodeSelect(keys) {
-  const key = keys[0]
-  if (key) {
-    const fileName = key.split('-').pop()
-    loadMusicInfo(fileName)
-  }
-}
-
-async function loadMusicInfo(fileName) {
-  try {
-    const res = await api.musicId3({ file_path: filePath.value, file_name: fileName })
-    if (res.data) {
-      editing.value = { ...res.data, is_save_lyrics_file: false, is_save_album_cover: false }
-      currentFileName = fileName
-      if (isMobile.value) mobileView.value = 'edit'
-    }
-  } catch {
-    message.error('读取标签失败')
-  }
-}
-
-function onNodeCheck(keys) {
-  checkedKeys.value = keys
-  if (isMobile.value && keys.length > 0) mobileView.value = 'edit'
+function onRowClick(row) {
+  selectedKey.value = row.file_name
+  editing.value = { ...row, is_save_lyrics_file: false, is_save_album_cover: false }
+  currentFileName = row.file_name
+  if (isMobile.value) mobileView.value = 'edit'
 }
 
 // --- Tag operations ---
@@ -171,7 +144,7 @@ async function saveTag() {
   saving.value = true
   try {
     await api.updateId3({
-      music_id3_info: [{ file_full_path: filePath.value + '/' + currentFileName, ...editing.value }],
+      music_id3_info: [{ file_full_path: filePath.value.replace(/\/$/, '') + '/' + currentFileName, ...editing.value }],
     })
     message.success('修改成功')
     if (isMobile.value) mobileView.value = 'file'
@@ -183,9 +156,12 @@ async function saveTag() {
 
 async function batchSave() {
   try {
+    const selectData = musicList.value
+      .filter((m) => checkedKeys.value.includes(m.file_name))
+      .map((m) => ({ name: m.file_name, icon: 'icon-script-file' }))
     await api.batchUpdateId3({
       file_full_path: filePath.value,
-      select_data: checkedKeys.value,
+      select_data: selectData,
       music_info: manualEdit.value,
     })
     message.success('批量修改成功')
@@ -216,9 +192,12 @@ function applyResult(item) {
 }
 
 function doBatchAuto() {
+  const selectData = musicList.value
+    .filter((m) => checkedKeys.value.includes(m.file_name))
+    .map((m) => ({ name: m.file_name, icon: 'icon-script-file' }))
   api.batchAutoUpdateId3({
     file_full_path: filePath.value,
-    select_data: checkedKeys.value,
+    select_data: selectData,
     music_info: { select_mode: batchMode.value, source_list: batchSources.value },
   })
   message.success('任务已创建')
