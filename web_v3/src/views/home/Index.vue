@@ -1,7 +1,7 @@
 <template>
   <div :style="layoutStyle">
     <!-- File Browser -->
-    <div v-show="!isMobile || mobileView === 'file'" :style="panelStyle('480px')">
+    <div v-show="!isMobile || mobileView === 'file'" :style="panelStyle(hasSelection ? '480px' : '1')">
       <FileBrowser
         :file-path="filePath"
         :music-list="musicList"
@@ -16,8 +16,8 @@
       />
     </div>
 
-    <!-- Tag Editor -->
-    <div v-show="!isMobile || mobileView === 'edit'" :style="panelStyle('1')">
+    <!-- Tag Editor: desktop only shows when file selected, mobile uses push nav -->
+    <div v-show="(isMobile && mobileView === 'edit') || (!isMobile && hasSelection)" :style="panelStyle('1')">
       <TagEditor
         :is-mobile="isMobile"
         :checked-keys="checkedKeys"
@@ -79,6 +79,8 @@ const sourceOptions = [
   { label: '酷狗', value: 'kugou' },
 ]
 
+const hasSelection = computed(() => !!editing.value.title || !!editing.value.filename || checkedKeys.value.length > 0)
+
 const layoutStyle = computed(() =>
   isMobile.value
     ? { display: 'flex', flexDirection: 'column', height: '100%' }
@@ -87,7 +89,8 @@ const layoutStyle = computed(() =>
 
 function panelStyle(flexVal) {
   if (isMobile.value) return { flex: 1, overflow: 'auto' }
-  return { width: flexVal, minWidth: '300px', overflow: 'auto' }
+  if (flexVal === '1') return { flex: 1, minWidth: '300px', overflow: 'auto' }
+  return { width: flexVal, flexShrink: 0, overflow: 'auto' }
 }
 
 // -- Fast file list (no ID3 read) --
