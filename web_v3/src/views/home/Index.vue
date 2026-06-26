@@ -7,6 +7,7 @@
         :music-list="musicList"
         :checked-keys="checkedKeys"
         :selected-key="selectedKey"
+        :loading-meta="loadingMeta"
         @update:file-path="(v) => filePath = v"
         @load-files="loadFiles"
         @go-up="goUpDir"
@@ -37,12 +38,7 @@
           <n-radio value="hard">严格模式</n-radio>
           <n-radio value="simple">宽松模式</n-radio>
         </n-radio-group>
-        <n-select
-          v-model:value="batchSources"
-          multiple
-          placeholder="音乐源"
-          :options="sourceOptions"
-        />
+        <n-select v-model:value="batchSources" multiple placeholder="音乐源" :options="sourceOptions" />
       </n-space>
       <template #footer>
         <n-button type="primary" round block @click="doBatchAuto">开始刮削</n-button>
@@ -70,6 +66,7 @@ const selectedKey = ref('')
 const editing = ref({})
 const manualEdit = ref({})
 const saving = ref(false)
+const loadingMeta = ref(false)
 const showBatchAuto = ref(false)
 const batchMode = ref('hard')
 const batchSources = ref([])
@@ -90,19 +87,31 @@ const layoutStyle = computed(() =>
 
 function panelStyle(flexVal) {
   if (isMobile.value) return { flex: 1, overflow: 'auto' }
-  return {
-    width: flexVal === '1' ? undefined : flexVal,
-    minWidth: flexVal === '1' ? undefined : '300px',
-    flex: flexVal === '1' ? 1 : undefined,
-    overflow: 'auto',
-  }
+  return { width: flexVal, minWidth: '300px', overflow: 'auto' }
 }
 
+// -- Fast file list (no ID3 read) --
 async function loadFiles() {
   try {
-    const res = await api.batchMusicList({ file_path: filePath.value, sorted_fields: [] })
-    if (res.data) musicList.value = res.data
+    const res = await api.fileList({ file_path: filePath.value, sorted_fields: [] })
+    if (res.data) {
+      musicList.value = flattenTree(res.data)
+    }
   } catch { message.error('加载文件失败') }
+}
+
+function flattenTree(nodes) {
+  const files = []
+  nodes.forEach((node) => {
+    if (node.children) {
+      node.children.forEach((child) => {
+        if (child.icon !== 'icon-folder') {
+          files.push({ name: child.name, size: child.size, update_time: child.update_time })
+        }
+      })
+    }
+  })
+  return files
 }
 
 function goUpDir() {
@@ -112,11 +121,19 @@ function goUpDir() {
   loadFiles()
 }
 
-function onRowClick(row) {
-  selectedKey.value = row.file_name
-  editing.value = { ...row, is_save_lyrics_file: false, is_save_album_cover: false }
-  currentFileName = row.file_name
-  if (isMobile.value) mobileView.value = 'edit'
+// -- Click file → load ID3 for single file --
+async function onRowClick(row) {
+  selectedKey.value = row.name
+  loadingMeta.value = true
+  try {
+    const res = await api.musicId3({ file_path: filePath.value, file_name: row.name })
+    if (res.data) {
+      editing.value = { ...res.data, is_save_lyrics_file: false, is_save_album_cover: false }
+      currentFileName = row.name
+      if (isMobile.value) mobileView.value = 'edit'
+    }
+  } catch { message.error('读取标签失败') }
+  loadingMeta.value = false
 }
 
 async function saveTag() {
@@ -134,8 +151,8 @@ async function saveTag() {
 async function batchSave() {
   try {
     const selectData = musicList.value
-      .filter((m) => checkedKeys.value.includes(m.file_name))
-      .map((m) => ({ name: m.file_name, icon: 'icon-script-file' }))
+      .filter((m) => checkedKeys.value.includes(m.name))
+      .map((m) => ({ name: m.name, icon: 'icon-script-file' }))
     await api.batchUpdateId3({ file_full_path: filePath.value, select_data: selectData, music_info: manualEdit.value })
     message.success('批量修改成功')
   } catch { message.error('修改失败') }
@@ -143,8 +160,8 @@ async function batchSave() {
 
 function doBatchAuto() {
   const selectData = musicList.value
-    .filter((m) => checkedKeys.value.includes(m.file_name))
-    .map((m) => ({ name: m.file_name, icon: 'icon-script-file' }))
+    .filter((m) => checkedKeys.value.includes(m.name))
+    .map((m) => ({ name: m.name, icon: 'icon-script-file' }))
   api.batchAutoUpdateId3({ file_full_path: filePath.value, select_data: selectData, music_info: { select_mode: batchMode.value, source_list: batchSources.value } })
   message.success('任务已创建')
   showBatchAuto.value = false
