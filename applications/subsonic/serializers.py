@@ -163,11 +163,7 @@ def get_album2_data(album):
 
 
 def get_song_list_data(tracks):
-    songs = []
-    for track in tracks:
-        track_data = get_track_data(track)
-        songs.append(track_data)
-    return songs
+    return [get_track_data(track) for track in tracks]
 
 
 class GetAlbumSerializer(serializers.Serializer):
@@ -212,108 +208,4 @@ def get_playlist_data(playlist):
         "songCount": 0,
         "duration": 0,
         "created": to_subsonic_date(playlist.creation_date),
-    }
-
-
-def get_playlist_detail_data(playlist):
-    data = get_playlist_data(playlist)
-    qs = (
-        playlist.playlist_tracks.select_related("track__album__artist")
-            .prefetch_related("track__uploads")
-            .order_by("index")
-    )
-    data["entry"] = []
-    for plt in qs:
-        try:
-            uploads = [upload for upload in plt.track.uploads.all()][0]
-        except IndexError:
-            continue
-        td = get_track_data(plt.track.album, plt.track, uploads)
-        data["entry"].append(td)
-    return data
-
-
-def get_folders(user):
-    return [
-        # Dummy folder ID to match what is returned in the getMusicFolders endpoint
-        # cf https://dev.funkwhale.audio/funkwhale/funkwhale/issues/624
-        {"id": 1, "name": "Music"}
-    ]
-
-
-def get_user_detail_data(user):
-    return {
-        "username": user.username,
-        "email": user.email,
-        "scrobblingEnabled": "true",
-        "adminRole": "false",
-        "settingsRole": "false",
-        "commentRole": "false",
-        "podcastRole": "true",
-        "coverArtRole": "false",
-        "shareRole": "false",
-        "uploadRole": "true",
-        "downloadRole": "true",
-        "playlistRole": "true",
-        "streamRole": "true",
-        "jukeboxRole": "true",
-        "folder": [f["id"] for f in get_folders(user)],
-    }
-
-
-def get_genre_data(tag):
-    return {
-        "songCount": getattr(tag, "_tracks_count", 0),
-        "albumCount": getattr(tag, "_albums_count", 0),
-        "value": tag.name,
-    }
-
-
-def get_channel_data(channel, uploads):
-    data = {
-        "id": str(channel.uuid),
-        "url": channel.get_rss_url(),
-        "title": channel.artist.name,
-        "description": channel.artist.description.as_plain_text
-        if channel.artist.description
-        else "",
-        "coverArt": f"at-{channel.artist.attachment_cover.uuid}"
-        if channel.artist.attachment_cover
-        else "",
-        "originalImageUrl": channel.artist.attachment_cover.url
-        if channel.artist.attachment_cover
-        else "",
-        "status": "completed",
-    }
-    if uploads:
-        data["episode"] = [
-            get_channel_episode_data(upload, channel.uuid) for upload in uploads
-        ]
-
-    return data
-
-
-def get_channel_episode_data(upload, channel_id):
-    return {
-        "id": str(upload.uuid),
-        "channelId": str(channel_id),
-        "streamId": upload.track.id,
-        "title": upload.track.name,
-        "description": upload.track.description.as_plain_text
-        if upload.track.description
-        else "",
-        "coverArt": f"at-{upload.track.attachment_cover.uuid}"
-        if upload.track.attachment_cover
-        else "",
-        "isDir": "false",
-        "year": upload.track.creation_date.year,
-        "publishDate": upload.track.creation_date.isoformat(),
-        "created": upload.track.creation_date.isoformat(),
-        "genre": "Podcast",
-        "size": upload.size if upload.size else "",
-        "duration": upload.duration if upload.duration else "",
-        "bitrate": upload.bitrate / 1000 if upload.bitrate else "",
-        "contentType": upload.mimetype or "audio/mpeg",
-        "suffix": upload.extension or "mp3",
-        "status": "completed",
     }

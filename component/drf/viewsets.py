@@ -5,8 +5,7 @@ views相关模块代码
 import math
 from collections import OrderedDict
 
-from django.db import transaction
-from rest_framework import mixins, viewsets
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView as _APIView
 
@@ -91,54 +90,3 @@ class GenericViewSet(ApiGenericMixin, viewsets.GenericViewSet):
         if data is None:
             data = []
         return Response({"result": True, "code": "200", "data": data, "message": msg})
-
-
-class CreateModelAndLogMixin(mixins.CreateModelMixin):
-    """
-    Create a model instance and log.
-    """
-
-    @transaction.atomic()
-    def perform_create(self, serializer):
-        # 补充基础Model--MaintainerFieldsMixin中的字段
-        user = serializer.context.get("request").user
-        username = getattr(user, "username", "guest")
-        instance = serializer.save()
-        log_type, obj, detail = instance.get_summary_title().split("/")
-
-
-class UpdateModelAndLogMixin(mixins.UpdateModelMixin):
-    """
-    Update a model instance and log.
-    """
-
-    @transaction.atomic()
-    def perform_update(self, serializer):
-        # 补充基础Model--MaintainerFieldsMixin中的字段
-        user = serializer.context.get("request").user
-        username = getattr(user, "username", "guest")
-        instance = serializer.save(updated_by=username)
-        log_type, obj, detail = instance.get_summary_title().split("/")
-
-
-class DestroyModelAndLogMixin(mixins.DestroyModelMixin):
-    """
-    Destroy a model instance and log.
-    """
-
-    def perform_destroy(self, instance):
-        with transaction.atomic():
-            log_type, obj, detail = instance.get_summary_title().split("/")
-            username = getattr(self, "request").user.username
-            instance.delete()
-
-
-class ModelAndLogViewSet(
-    mixins.ListModelMixin,
-    CreateModelAndLogMixin,
-    mixins.RetrieveModelMixin,
-    UpdateModelAndLogMixin,
-    DestroyModelAndLogMixin,
-    GenericViewSet,
-):
-    pass
