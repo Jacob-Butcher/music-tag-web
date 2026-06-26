@@ -2,4 +2,5 @@ from django.apps import AppConfig
 
 
 class SubsonicConfig(AppConfig):
-    name = 'subsonic'
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'applications.subsonic'

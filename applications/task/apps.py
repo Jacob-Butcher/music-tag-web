@@ -5,6 +5,7 @@ from applications.task.handlers import init_task
 
 
 class ProjectConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
     name = 'applications.task'
 
     def ready(self):
