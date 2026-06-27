@@ -288,15 +288,23 @@ function doBatchAuto() {
   batchPollTimer = setInterval(loadBatchHistory, 3000)
 }
 
+let prevRunning = false
+
 async function loadBatchHistory() {
   try {
     const res = await api.getBatchTasks()
     if (res.data) {
       batchHistory.value = (Array.isArray(res.data) ? res.data : (res.data.results || [])).slice(0, 20)
+      const wasRunning = prevRunning
+      prevRunning = !!runningBatch.value
       // Stop polling when no running tasks
       if (!runningBatch.value && batchPollTimer) {
         clearInterval(batchPollTimer)
         batchPollTimer = null
+        // Batch just completed — refresh file list metadata
+        if (wasRunning) {
+          loadFiles()
+        }
       }
     }
   } catch { /* ignore */ }
