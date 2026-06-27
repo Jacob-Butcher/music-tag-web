@@ -1,7 +1,7 @@
 <template>
   <div :style="layoutStyle">
     <!-- File Browser -->
-    <div v-show="!isMobile || mobileView === 'file'" :style="panelStyle(hasSelection ? '480px' : '1')">
+    <div v-show="!isMobile || mobileView === 'file'" :style="panelStyle('1')">
       <FileBrowser
         :file-path="filePath"
         :music-list="musicList"
@@ -16,8 +16,8 @@
       />
     </div>
 
-    <!-- Tag Editor: desktop only shows when file selected, mobile uses push nav -->
-    <div v-show="(isMobile && mobileView === 'edit') || (!isMobile && hasSelection)" :style="panelStyle('420px')">
+    <!-- Tag Editor: always visible on desktop, push nav on mobile -->
+    <div v-show="!isMobile || mobileView === 'edit'" :style="panelStyle('420px')">
       <TagEditor
         :is-mobile="isMobile"
         :checked-keys="checkedKeys"
@@ -106,8 +106,6 @@ const sourceOptions = [
   { label: 'QQ音乐', value: 'qmusic' },
   { label: '酷狗', value: 'kugou' },
 ]
-
-const hasSelection = computed(() => !!editing.value.title || !!editing.value.filename || checkedKeys.value.length > 0)
 
 const layoutStyle = computed(() =>
   isMobile.value
