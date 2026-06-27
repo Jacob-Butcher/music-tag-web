@@ -41,7 +41,7 @@
             style="display:flex;align-items:center;padding:6px 8px;cursor:pointer;border-bottom:1px solid #f5f5f5;"
             :style="{ background: hoverIdx === i ? '#f5f5f7' : '' }"
             @mouseenter="hoverIdx = i" @mouseleave="hoverIdx = -1"
-            @click="$emit('apply-meta', item); searchResults = []">
+            @click="!item._err && $emit('apply-meta', item); !item._err && (searchResults = [])">
             <n-image v-if="item.album_img" :src="item.album_img" width="36" height="36" style="border-radius:4px;margin-right:8px;" preview-disabled />
             <div style="flex:1;overflow:hidden;">
               <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ item.name }}</div>
@@ -109,10 +109,15 @@ async function doOnlineSearch() {
   const title = props.editing.title
   if (!title) return
   searching.value = true
+  searchResults.value = []
   try {
     const res = await api.fetchId3Title({ title, resource: searchSource.value })
-    searchResults.value = res.data || []
-  } catch { searchResults.value = [] }
+    if (res.data && res.data.length) {
+      searchResults.value = res.data
+    } else if (res.result === false || res.code) {
+      searchResults.value = [{ name: '搜索失败: ' + (res.message || res.msg || '无结果'), artist: '', album: '', _err: true }]
+    }
+  } catch { searchResults.value = [{ name: '网络请求失败，请检查网络连接', artist: '', album: '', _err: true }] }
   searching.value = false
 }
 
