@@ -24,7 +24,7 @@
         @save-tag="saveTag"
         @batch-save="batchSave"
         @show-batch-auto="showBatchAuto = true"
-        @show-progress="taskModal.show = true"
+        @show-progress="taskCollapsed = false"
         @apply-meta="(item, source) => applyOnlineMeta(item, source)"
         @back="mobileView = 'file'"
       />
@@ -44,33 +44,41 @@
       </template>
     </n-modal>
 
-    <!-- Task progress modal (keeps polling even when closed) -->
-    <n-modal :show="taskModal.show" :on-update:show="(v) => taskModal.show = v" title="刮削进度" preset="card" style="width: 480px; max-height: 70vh;">
-      <n-space v-if="taskModal.total" vertical :size="12">
-        <div style="display:flex;gap:24px;font-size:13px;">
-          <span>总数: <b>{{ taskModal.total }}</b></span>
-          <span style="color:#18a058;">成功: <b>{{ taskModal.success }}</b></span>
-          <span style="color:#d03050;">失败: <b>{{ taskModal.failed }}</b></span>
-          <span v-if="taskModal.pending" style="color:#999;">处理中: {{ taskModal.pending }}</span>
+    <!-- Floating task panel (top-right) -->
+    <div v-if="taskModal.items.length" class="task-panel" :class="{ collapsed: taskCollapsed }">
+      <div class="task-panel-header" @click="taskCollapsed = !taskCollapsed">
+        <span>刮削进度</span>
+        <span style="font-size:11px;">
+          ✓<b style="color:#18a058">{{ taskModal.success }}</b>
+          ✗<b style="color:#d03050">{{ taskModal.failed }}</b>
+          <span v-if="taskModal.pending">···{{ taskModal.pending }}</span>
+        </span>
+        <n-button text size="tiny" @click.stop="taskModal.items = []">✕</n-button>
+      </div>
+      <div v-if="!taskCollapsed" style="max-height:260px;overflow:auto;">
+        <div v-for="t in taskModal.items" :key="t.full_path" style="display:flex;align-items:center;padding:3px 8px;font-size:11px;border-bottom:1px solid #f5f5f5;">
+          <span :style="{color: t.state==='success'?'#18a058':t.state==='failed'?'#d03050':'#999',width:'16px'}">{{ t.state==='success'?'✓':t.state==='failed'?'✗':'·' }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.song_name || t.filename || '' }}</span>
+          <span v-if="t.message" style="color:#d03050;font-size:10px;margin-left:4px;">{{ t.message }}</span>
         </div>
-        <n-progress
-          type="line"
-          :percentage="taskModal.total ? Math.round((taskModal.success + taskModal.failed) / taskModal.total * 100) : 0"
-          :color="taskModal.failed ? '#f0a020' : '#18a058'"
-        />
-        <n-data-table
-          :columns="taskColumns"
-          :data="taskModal.items"
-          size="small"
-          :row-key="(r) => r.full_path"
-          max-height="300"
-          virtual-scroll
-        />
-      </n-space>
-      <div v-else style="text-align:center;padding:20px;color:#999;">等待任务开始...</div>
-    </n-modal>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.task-panel {
+  position: fixed; top: 8px; right: 8px; width: 280px; z-index: 200;
+  background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
+  border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  font-size: 12px; border: 1px solid #e8e8ed;
+}
+.task-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; cursor: pointer; font-weight: 500; gap: 8px;
+}
+.task-panel.collapsed .task-panel-header { border-bottom: none; }
+</style>
 
 <script setup>
 import { h, ref, computed, onBeforeUnmount } from 'vue'
@@ -97,6 +105,7 @@ const batchMode = ref('hard')
 const batchSources = ref([])
 const taskModal = ref({ show: false, total: 0, success: 0, failed: 0, pending: 0, items: [] })
 const taskPaths = ref([])
+const taskCollapsed = ref(false)
 let taskPollTimer = null
 let currentFileName = ''
 let currentFileFullPath = ''
@@ -302,18 +311,6 @@ function startTaskPoll() {
     } catch { /* ignore poll errors */ }
   }, 2000)
 }
-
-const taskColumns = [
-  { title: '歌曲', key: 'song_name', ellipsis: { tooltip: true }, width: 150 },
-  {
-    title: '状态', key: 'state', width: 70,
-    render(row) {
-      const map = { success: '✓', failed: '✗' }
-      return h('span', { style: { color: row.state === 'success' ? '#18a058' : row.state === 'failed' ? '#d03050' : '#999' } }, map[row.state] || '...')
-    },
-  },
-  { title: '信息', key: 'message', ellipsis: { tooltip: true }, width: 200 },
-]
 
 onBeforeUnmount(() => {
   if (taskPollTimer) clearInterval(taskPollTimer)
