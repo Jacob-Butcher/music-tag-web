@@ -297,6 +297,7 @@ function startTaskPoll() {
     try {
       const res = await api.getRecord({ full_path: filePath.value.replace(/\/$/, '') })
       if (res.data) {
+        pollErrors = 0
         let items = Array.isArray(res.data) ? res.data : (res.data.results || [])
         // Filter to only selected files
         const pathSet = new Set(taskPaths.value)
