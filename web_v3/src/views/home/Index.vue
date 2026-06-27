@@ -45,7 +45,7 @@
     </n-modal>
 
     <!-- Operation history (top-right) -->
-    <n-button v-if="batchHistory.length || batchPollTimer" size="small" round style="position:fixed;top:8px;right:8px;z-index:200;" @click="showTaskPanel = !showTaskPanel">
+    <n-button size="small" round style="position:fixed;top:8px;right:8px;z-index:200;" @click="showTaskPanel = !showTaskPanel">
       <template #icon><n-icon size="16"><TimeOutline /></n-icon></template>
       操作记录
       <span v-if="runningBatch" style="color:#f0a020"> ···{{ runningBatch.total - runningBatch.success - runningBatch.failed }}</span>
