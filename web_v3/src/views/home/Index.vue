@@ -225,10 +225,14 @@ async function saveTag() {
   saving.value = true
   try {
     const savePath = currentFileFullPath || (filePath.value.replace(/\/$/, '') + '/' + currentFileName)
+    const payload = { file_full_path: savePath, ...editing.value }
+    // Map artwork → album_img for backend
+    if (payload.artwork && !payload.album_img) { payload.album_img = payload.artwork; delete payload.artwork }
     const res = await api.updateId3({
-      music_id3_info: [{ file_full_path: savePath, ...editing.value }],
+      music_id3_info: [payload],
     })
-    if (res.result === false || res.code) {
+    const errCode = String(res.code || '')
+    if (res.result === false || errCode.startsWith('4') || errCode.startsWith('5')) {
       message.error('保存失败: ' + (res.message || JSON.stringify(res)))
     } else {
       message.success('修改成功')
@@ -254,6 +258,7 @@ function applyOnlineMeta(item) {
   editing.value.album = item.album || editing.value.album
   editing.value.year = item.year || editing.value.year
   editing.value.artwork = item.album_img || editing.value.artwork
+  editing.value.album_img = item.album_img || editing.value.album_img
   message.success('已应用在线元数据')
 }
 
