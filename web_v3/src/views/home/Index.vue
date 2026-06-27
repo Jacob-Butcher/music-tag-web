@@ -30,6 +30,7 @@
         @batch-save="batchSave"
         @show-batch-auto="showBatchAuto = true"
         @show-progress="taskModal.show = true"
+        @apply-meta="applyOnlineMeta"
         @back="mobileView = 'file'"
       />
     </div>
@@ -238,6 +239,15 @@ async function batchSave() {
     await api.batchUpdateId3({ file_full_path: filePath.value, select_data: selectData, music_info: manualEdit.value })
     message.success('批量修改成功')
   } catch { message.error('修改失败') }
+}
+
+function applyOnlineMeta(item) {
+  editing.value.title = item.name || editing.value.title
+  editing.value.artist = item.artist || editing.value.artist
+  editing.value.album = item.album || editing.value.album
+  editing.value.year = item.year || editing.value.year
+  editing.value.artwork = item.album_img || editing.value.artwork
+  message.success('已应用在线元数据')
 }
 
 function doBatchAuto() {

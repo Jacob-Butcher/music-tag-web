@@ -31,6 +31,24 @@
         <template v-if="editing.artwork">
           <n-image :src="editing.artwork" width="200" style="border-radius: 8px;" />
         </template>
+        <!-- Online search -->
+        <div style="display:flex;gap:8px;">
+          <n-select v-model:value="searchSource" size="small" style="width:110px;" :options="sourceOpts" placeholder="数据源" />
+          <n-button size="small" :loading="searching" @click="doOnlineSearch" style="flex:1;">在线搜索资源</n-button>
+        </div>
+        <div v-if="searchResults.length" style="max-height:180px;overflow:auto;border:1px solid #eee;border-radius:8px;">
+          <div v-for="(item, i) in searchResults" :key="i"
+            style="display:flex;align-items:center;padding:6px 8px;cursor:pointer;border-bottom:1px solid #f5f5f5;"
+            :style="{ background: hoverIdx === i ? '#f5f5f7' : '' }"
+            @mouseenter="hoverIdx = i" @mouseleave="hoverIdx = -1"
+            @click="$emit('apply-meta', item); searchResults = []">
+            <n-image v-if="item.album_img" :src="item.album_img" width="36" height="36" style="border-radius:4px;margin-right:8px;" preview-disabled />
+            <div style="flex:1;overflow:hidden;">
+              <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ item.name }}</div>
+              <div style="font-size:11px;color:#999;">{{ item.artist }} · {{ item.album }}<span v-if="item.year"> · {{ item.year }}</span></div>
+            </div>
+          </div>
+        </div>
         <n-button type="primary" block round :loading="saving" @click="$emit('save-tag')" style="height: 48px;">
           保存信息
         </n-button>
@@ -59,9 +77,11 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { ChevronBack } from '@vicons/ionicons5'
+import api from '@/api'
 
-defineProps({
+const props = defineProps({
   isMobile: { type: Boolean, default: false },
   checkedKeys: { type: Array, default: () => [] },
   editing: { type: Object, default: () => ({}) },
@@ -70,7 +90,31 @@ defineProps({
   taskInfo: { type: Object, default: () => ({}) },
 })
 
-defineEmits(['save-tag', 'batch-save', 'show-batch-auto', 'show-progress', 'back'])
+defineEmits(['save-tag', 'batch-save', 'show-batch-auto', 'show-progress', 'back', 'apply-meta'])
+
+const searchSource = ref('netease')
+const searching = ref(false)
+const searchResults = ref([])
+const hoverIdx = ref(-1)
+
+const sourceOpts = [
+  { label: '网易云', value: 'netease' },
+  { label: 'QQ音乐', value: 'qmusic' },
+  { label: '酷狗', value: 'kugou' },
+  { label: '酷我', value: 'kuwo' },
+  { label: '咪咕', value: 'migu' },
+]
+
+async function doOnlineSearch() {
+  const title = props.editing.title
+  if (!title) return
+  searching.value = true
+  try {
+    const res = await api.fetchId3Title({ title, resource: searchSource.value })
+    searchResults.value = res.data || []
+  } catch { searchResults.value = [] }
+  searching.value = false
+}
 
 function fmtDuration(sec) {
   if (!sec) return ''
