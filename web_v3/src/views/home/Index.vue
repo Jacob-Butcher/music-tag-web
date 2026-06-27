@@ -303,6 +303,7 @@ async function loadBatchHistory() {
         batchPollTimer = null
         // Batch just completed — refresh file list metadata
         if (wasRunning) {
+          checkedKeys.value = []
           loadFiles()
         }
       }
