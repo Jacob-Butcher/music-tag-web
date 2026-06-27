@@ -8,6 +8,7 @@
         @update:checked-keys="(v) => checkedKeys = v"
         @row-click="onRowClick"
         @search="onSearch"
+        @clear-search="loadFiles"
       />
     </div>
 

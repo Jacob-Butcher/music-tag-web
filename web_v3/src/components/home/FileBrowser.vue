@@ -47,7 +47,7 @@ defineProps({
   checkedKeys: { type: Array, default: () => [] },
 })
 
-const emit = defineEmits(['update:checkedKeys', 'row-click', 'search'])
+const emit = defineEmits(['update:checkedKeys', 'row-click', 'search', 'clear-search'])
 
 const searchText = ref('')
 const searchMode = ref(false)
@@ -64,6 +64,7 @@ function doSearch() {
 function doClear() {
   searchText.value = ''
   searchMode.value = false
+  emit('clear-search')
 }
 
 function formatDuration(sec) {
