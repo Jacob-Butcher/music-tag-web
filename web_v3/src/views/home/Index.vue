@@ -7,7 +7,7 @@
         :checked-keys="checkedKeys"
         @update:checked-keys="(v) => checkedKeys = v"
         @row-click="onRowClick"
-        @search="onSearch"
+        @search="(q, t) => onSearch(q, t)"
         @clear-search="loadFiles"
       />
     </div>
@@ -145,9 +145,9 @@ async function loadFiles() {
   } catch { message.error('加载文件失败') }
 }
 
-async function onSearch(query) {
+async function onSearch(query, searchType = 'title') {
   try {
-    const res = await api.searchMusic({ query })
+    const res = await api.searchMusic({ query, search_type: searchType })
     if (res.data) {
       musicList.value = res.data.map((f) => ({
         name: f.name,

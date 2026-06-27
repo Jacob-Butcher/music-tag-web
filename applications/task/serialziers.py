@@ -17,6 +17,7 @@ class BatchMusicId3Serializer(serializers.Serializer):
 
 class SearchMusicSerializer(serializers.Serializer):
     query = serializers.CharField(required=True)
+    search_type = serializers.CharField(required=False, default="title")
 
 
 class Id3Serializer(serializers.Serializer):

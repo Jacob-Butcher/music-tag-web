@@ -346,22 +346,36 @@ class TaskViewSets(GenericViewSet):
 
     @action(methods=['POST'], detail=False)
     def search_music(self, request, *args, **kwargs):
-        """搜索歌曲（按文件名模糊匹配）"""
+        """搜索歌曲（按文件名/标题/艺术家/专辑）"""
         validate_data = self.is_validated_data(request.data)
-        query = validate_data['query']
+        query = validate_data['query'].lower()
+        search_type = validate_data.get('search_type', 'title')
         media_root = os.path.join(settings.MEDIA_ROOT, "music") if os.path.isdir(os.path.join(settings.MEDIA_ROOT, "music")) else settings.MEDIA_ROOT
         results = []
         try:
-            for entry in pathlib.Path(media_root).rglob(f"*{query}*"):
+            for entry in pathlib.Path(media_root).rglob(f"*{query}*" if search_type == 'title' else "*"):
                 if entry.is_file():
                     suffix = entry.suffix.lower().lstrip(".")
-                    if suffix in ALLOW_TYPE:
-                        results.append({
-                            "name": entry.name,
-                            "file_path": str(entry.parent),
-                            "full_path": str(entry),
-                            "size": entry.stat().st_size,
-                        })
+                    if suffix not in ALLOW_TYPE:
+                        continue
+                    info = {"name": entry.name, "file_path": str(entry.parent), "full_path": str(entry), "size": entry.stat().st_size}
+                    # Title search: match filename
+                    if search_type == 'title':
+                        results.append(info)
+                    else:
+                        # Read ID3 for artist/album match
+                        try:
+                            meta = MusicIDS(str(entry)).to_dict()
+                            if search_type == 'artist' and query in (meta.get('artist') or '').lower():
+                                info.update(meta)
+                                results.append(info)
+                            elif search_type == 'album' and query in (meta.get('album') or '').lower():
+                                info.update(meta)
+                                results.append(info)
+                        except Exception:
+                            pass
+                    if len(results) >= 100:
+                        break
         except Exception:
             pass
         return self.success_response(data=results[:100])

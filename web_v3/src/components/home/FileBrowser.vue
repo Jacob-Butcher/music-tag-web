@@ -2,6 +2,7 @@
   <n-card :bordered="false" size="small" style="border-radius: 12px; height: 100%;">
     <n-space vertical :size="8">
       <n-space :size="4" align="center">
+        <n-select v-model:value="searchType" size="small" style="width:72px;" :options="searchTypeOptions" />
         <n-input
           v-model:value="searchText"
           size="small"
@@ -58,8 +59,15 @@ const props = defineProps({
 const emit = defineEmits(['update:checkedKeys', 'row-click', 'search', 'clear-search'])
 
 const searchText = ref('')
+const searchType = ref('title')
 const searchMode = ref(false)
 const lastQuery = ref('')
+
+const searchTypeOptions = [
+  { label: '标题', value: 'title' },
+  { label: '艺术家', value: 'artist' },
+  { label: '专辑', value: 'album' },
+]
 
 const filters = reactive({ noArtwork: false, noLyrics: false, noArtist: false, noAlbum: false, noYear: false })
 const filterOptions = [
@@ -88,7 +96,7 @@ function doSearch() {
   if (searchText.value) {
     searchMode.value = true
     lastQuery.value = searchText.value
-    emit('search', searchText.value)
+    emit('search', searchText.value, searchType.value)
   }
 }
 
