@@ -65,7 +65,7 @@ class KuwoClient:
             'httpsStatus': 1
         }
         resp = self._api_request(url, params)
-        songs = resp.get('data', {}).get('list', None)
+        songs = resp.get('data', {}).get('list') or []
         for song in songs:
             song["id"] = song['rid']
             song["name"] = song['name']

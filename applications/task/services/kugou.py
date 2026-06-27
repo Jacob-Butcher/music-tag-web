@@ -206,7 +206,7 @@ class KugouClient:
         url = URL_SEARCH.format(keyword=title, time=millis, signature=signature)
         response = requests.get(url=url)
         json_dict = response.json()
-        songs = json_dict.get("data", {}).get("lists")
+        songs = json_dict.get("data", {}).get("lists") or []
         for song in songs:
             artists = song['SingerName'].replace("<em>", "").replace("</em>", "")
             song["artist"] = ",".join(artists.split("、"))
