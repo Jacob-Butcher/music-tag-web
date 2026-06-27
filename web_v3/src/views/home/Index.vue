@@ -103,6 +103,7 @@ const batchSources = ref([])
 const taskModal = ref({ show: false, total: 0, success: 0, failed: 0, pending: 0, items: [] })
 let taskPollTimer = null
 let currentFileName = ''
+let currentFileFullPath = ''
 
 const sourceOptions = [
   { label: '网易云', value: 'netease' },
