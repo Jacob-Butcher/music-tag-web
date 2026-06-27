@@ -13,7 +13,10 @@ http.interceptors.request.use((config) => {
 
 http.interceptors.response.use(
   (response) => response.data,
-  (error) => ({ code: 500, message: String(error), result: false })
+  (error) => {
+    const msg = error.response ? `HTTP ${error.response.status}: ${JSON.stringify(error.response.data)}` : (error.message || String(error))
+    return { code: error.response?.status || 500, message: msg, result: false }
+  }
 )
 
 const POST = (url, params) => http.post(url, params)

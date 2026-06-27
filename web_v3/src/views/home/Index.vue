@@ -216,7 +216,7 @@ async function onRowClick(row) {
       currentFileFullPath = row.full_path || (dirPath.replace(/\/$/, '') + '/' + row.name)
       if (isMobile.value) mobileView.value = 'edit'
     }
-  } catch { message.error('读取标签失败') }
+  } catch (e) { message.error('读取标签失败: ' + (e.message || e)) }
   loadingMeta.value = false
 }
 
@@ -233,7 +233,7 @@ async function saveTag() {
       message.success('修改成功')
       if (isMobile.value) mobileView.value = 'file'
     }
-  } catch { message.error('保存失败，网络错误') }
+  } catch (e) { message.error('保存失败: ' + (e.message || e)) }
   saving.value = false
 }
 
