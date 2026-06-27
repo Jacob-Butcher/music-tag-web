@@ -178,7 +178,7 @@ class TaskViewSets(GenericViewSet):
     def batch_update_id3(self, request, *args, **kwargs):
         """批量更新音乐id3信息"""
         validate_data = self.is_validated_data(request.data)
-        full_path = validate_data['file_full_path']
+        full_path = validate_data['file_full_path'].rstrip('/')
         select_data = validate_data['select_data']
         music_info = validate_data['music_info']
         music_id3_info = []
@@ -209,7 +209,7 @@ class TaskViewSets(GenericViewSet):
     @action(methods=['POST'], detail=False)
     def batch_auto_update_id3(self, request, *args, **kwargs):
         validate_data = self.is_validated_data(request.data)
-        full_path = validate_data['file_full_path']
+        full_path = validate_data['file_full_path'].rstrip('/')
         select_data = validate_data['select_data']
         music_info = validate_data['music_info']
         select_mode = music_info["select_mode"]

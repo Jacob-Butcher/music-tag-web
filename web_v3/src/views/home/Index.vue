@@ -109,6 +109,7 @@ const showTaskPanel = ref(false)
 let taskPollTimer = null
 let taskPollStart = 0
 let pollErrors = 0
+let pollCount = 0
 let currentFileName = ''
 let currentFileFullPath = ''
 
@@ -292,8 +293,10 @@ function doBatchAuto() {
 }
 
 function startTaskPoll() {
+  pollErrors = 0; pollCount = 0
   if (taskPollTimer) clearInterval(taskPollTimer)
   taskPollTimer = setInterval(async () => {
+    pollCount++
     try {
       const res = await api.getRecord({ full_path: filePath.value.replace(/\/$/, '') })
       if (res.data) {
@@ -311,6 +314,11 @@ function startTaskPoll() {
           clearInterval(taskPollTimer)
           taskPollTimer = null
           message.success(`刮削完成: ${success} 成功, ${failed} 失败`)
+        }
+        // Stop if no results after 10 polls
+        if (pollCount > 10 && !items.length) {
+          clearInterval(taskPollTimer); taskPollTimer = null
+          message.warning('刮削任务未创建，请检查文件路径')
         }
         // Timeout after 5 minutes
         if (Date.now() - taskPollStart > 300000) {
