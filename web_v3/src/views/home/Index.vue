@@ -24,9 +24,11 @@
         :editing="editing"
         :manual-edit="manualEdit"
         :saving="saving"
+        :task-info="taskModal"
         @save-tag="saveTag"
         @batch-save="batchSave"
         @show-batch-auto="showBatchAuto = true"
+        @show-progress="taskModal.show = true"
         @back="mobileView = 'file'"
       />
     </div>
@@ -45,8 +47,8 @@
       </template>
     </n-modal>
 
-    <!-- Task progress modal -->
-    <n-modal v-model:show="taskModal.show" title="刮削进度" preset="card" style="width: 480px; max-height: 70vh;">
+    <!-- Task progress modal (keeps polling even when closed) -->
+    <n-modal :show="taskModal.show" :on-update:show="(v) => taskModal.show = v" title="刮削进度" preset="card" style="width: 480px; max-height: 70vh;">
       <n-space v-if="taskModal.total" vertical :size="12">
         <div style="display:flex;gap:24px;font-size:13px;">
           <span>总数: <b>{{ taskModal.total }}</b></span>
@@ -235,7 +237,7 @@ function startTaskPoll() {
   if (taskPollTimer) clearInterval(taskPollTimer)
   taskPollTimer = setInterval(async () => {
     try {
-      const res = await api.getRecord({ parent_path: filePath.value })
+      const res = await api.getRecord({ parent_path: filePath.value.replace(/\/$/, '') })
       if (res.data) {
         const items = Array.isArray(res.data) ? res.data : (res.data.results || [])
         const success = items.filter((t) => t.state === 'success').length

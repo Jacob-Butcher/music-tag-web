@@ -46,6 +46,13 @@
         <n-input v-model:value="manualEdit.album" placeholder="批量设置专辑" />
         <n-button type="primary" block round @click="$emit('batch-save')" style="height: 48px;">手动修改</n-button>
         <n-button type="warning" block round @click="$emit('show-batch-auto')" style="height: 48px;">自动刮削</n-button>
+        <!-- Task progress indicator -->
+        <div v-if="taskInfo.items && taskInfo.items.length" style="padding:8px 12px;background:#f5f5f7;border-radius:8px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span>刮削: <b style="color:#18a058">{{ taskInfo.success }}</b> / <b>{{ taskInfo.total }}</b><span v-if="taskInfo.failed" style="color:#d03050"> ({{ taskInfo.failed }} 失败)</span></span>
+            <n-button text size="tiny" type="primary" @click="$emit('show-progress')">查看进度</n-button>
+          </div>
+        </div>
       </n-space>
     </template>
   </n-card>
@@ -60,9 +67,10 @@ defineProps({
   editing: { type: Object, default: () => ({}) },
   manualEdit: { type: Object, default: () => ({}) },
   saving: { type: Boolean, default: false },
+  taskInfo: { type: Object, default: () => ({}) },
 })
 
-defineEmits(['save-tag', 'batch-save', 'show-batch-auto', 'back'])
+defineEmits(['save-tag', 'batch-save', 'show-batch-auto', 'show-progress', 'back'])
 
 function fmtDuration(sec) {
   if (!sec) return ''
