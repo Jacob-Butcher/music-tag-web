@@ -114,8 +114,8 @@ async function doOnlineSearch() {
     const res = await api.fetchId3Title({ title, resource: searchSource.value })
     if (res.data && res.data.length) {
       searchResults.value = res.data
-    } else if (res.result === false || res.code) {
-      searchResults.value = [{ name: '搜索失败: ' + (res.message || res.msg || '无结果'), artist: '', album: '', _err: true }]
+    } else {
+      searchResults.value = [{ name: res.message || res.msg || '未搜索到结果', artist: res.result === false ? '请求失败' : '换个数据源试试', album: '', _err: true }]
     }
   } catch { searchResults.value = [{ name: '网络请求失败，请检查网络连接', artist: '', album: '', _err: true }] }
   searching.value = false

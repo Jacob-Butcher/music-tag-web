@@ -213,6 +213,7 @@ async function onRowClick(row) {
     if (res.data) {
       editing.value = { ...res.data, is_save_lyrics_file: false, is_save_album_cover: false }
       currentFileName = row.name
+      currentFileFullPath = row.full_path || (dirPath.replace(/\/$/, '') + '/' + row.name)
       if (isMobile.value) mobileView.value = 'edit'
     }
   } catch { message.error('读取标签失败') }
@@ -222,12 +223,17 @@ async function onRowClick(row) {
 async function saveTag() {
   saving.value = true
   try {
-    await api.updateId3({
-      music_id3_info: [{ file_full_path: filePath.value.replace(/\/$/, '') + '/' + currentFileName, ...editing.value }],
+    const savePath = currentFileFullPath || (filePath.value.replace(/\/$/, '') + '/' + currentFileName)
+    const res = await api.updateId3({
+      music_id3_info: [{ file_full_path: savePath, ...editing.value }],
     })
-    message.success('修改成功')
-    if (isMobile.value) mobileView.value = 'file'
-  } catch { message.error('保存失败') }
+    if (res.result === false || res.code) {
+      message.error('保存失败: ' + (res.message || JSON.stringify(res)))
+    } else {
+      message.success('修改成功')
+      if (isMobile.value) mobileView.value = 'file'
+    }
+  } catch { message.error('保存失败，网络错误') }
   saving.value = false
 }
 
