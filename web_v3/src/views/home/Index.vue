@@ -273,7 +273,7 @@ function doBatchAuto() {
   // Store selected paths and start polling
   taskPaths.value = musicList.value
     .filter((m) => checkedKeys.value.includes(m.name))
-    .map((m) => m.full_path || (filePath.value.replace(/\/$/, '') + '/' + m.name))
+    .map((m) => filePath.value.replace(/\/$/, '') + '/' + m.name)
   taskModal.value = { show: true, total: selectData.length, success: 0, failed: 0, pending: selectData.length, items: [] }
   startTaskPoll()
 }
