@@ -102,7 +102,6 @@ const sourceOpts = [
   { label: 'QQ音乐', value: 'qmusic' },
   { label: '酷狗', value: 'kugou' },
   { label: '酷我', value: 'kuwo' },
-  { label: '咪咕', value: 'migu' },
 ]
 
 async function doOnlineSearch() {

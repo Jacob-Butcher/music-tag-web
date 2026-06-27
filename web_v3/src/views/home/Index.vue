@@ -297,4 +297,6 @@ const taskColumns = [
 onBeforeUnmount(() => {
   if (taskPollTimer) clearInterval(taskPollTimer)
 })
+
+loadFiles()
 </script>
