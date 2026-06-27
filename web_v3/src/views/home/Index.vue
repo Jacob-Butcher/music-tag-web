@@ -108,6 +108,7 @@ const taskPaths = ref([])
 const showTaskPanel = ref(false)
 let taskPollTimer = null
 let taskPollStart = 0
+let pollErrors = 0
 let currentFileName = ''
 let currentFileFullPath = ''
 
@@ -317,7 +318,10 @@ function startTaskPoll() {
           if (pending > 0) message.warning('刮削超时，部分文件未处理')
         }
       }
-    } catch { /* ignore poll errors */ }
+    } catch {
+      pollErrors++
+      if (pollErrors > 5) { clearInterval(taskPollTimer); taskPollTimer = null; message.error('刮削进度查询失败') }
+    }
   }, 2000)
 }
 
