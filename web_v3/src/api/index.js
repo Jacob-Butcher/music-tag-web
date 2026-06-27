@@ -21,6 +21,7 @@ const GET = (url, params) => http.get(url, { params })
 
 export default {
   fileList: (params) => POST('/api/file_list/', params),
+  searchMusic: (params) => POST('/api/search_music/', params),
   batchMusicId3: (params) => POST('/api/batch_music_id3/', params),
   musicId3: (params) => POST('/api/music_id3/', params),
   updateId3: (params) => POST('/api/update_id3/', params),

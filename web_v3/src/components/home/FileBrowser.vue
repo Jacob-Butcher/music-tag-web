@@ -6,16 +6,20 @@
           <n-icon size="20"><ArrowUndo /></n-icon>
         </n-button>
         <n-input
-          :value="filePath"
+          :value="searchText"
           size="small"
-          placeholder="输入文件夹路径"
-          @update:value="(val) => $emit('update:filePath', val)"
-          @keyup.enter="$emit('load-files')"
+          placeholder="搜索歌曲"
+          clearable
+          @update:value="onInput"
+          @keyup.enter="doSearch"
+          @clear="doClear"
         />
-        <n-button text @click="$emit('load-files')">
-          <n-icon size="20"><ArrowDown /></n-icon>
+        <n-button text @click="doSearch">
+          <n-icon size="20"><Search /></n-icon>
         </n-button>
       </n-space>
+      <div v-if="searchMode" style="font-size:12px;color:#999;">搜索结果: "{{ lastQuery }}" · {{ musicList.length }} 首</div>
+      <div v-else style="font-size:12px;color:#999;">{{ filePath }}</div>
 
       <n-data-table
         v-if="musicList.length"
@@ -39,9 +43,9 @@
 </template>
 
 <script setup>
-import { h } from 'vue'
+import { h, ref } from 'vue'
 import { NImage } from 'naive-ui'
-import { ArrowUndo, ArrowDown, FolderOpenOutline } from '@vicons/ionicons5'
+import { ArrowUndo, Search, FolderOpenOutline } from '@vicons/ionicons5'
 
 defineProps({
   filePath: { type: String, required: true },
@@ -49,7 +53,34 @@ defineProps({
   checkedKeys: { type: Array, default: () => [] },
 })
 
-const emit = defineEmits(['update:filePath', 'load-files', 'go-up', 'update:checkedKeys', 'row-click'])
+const emit = defineEmits(['update:filePath', 'load-files', 'go-up', 'update:checkedKeys', 'row-click', 'search'])
+
+const searchText = ref('')
+const searchMode = ref(false)
+const lastQuery = ref('')
+
+function onInput(val) {
+  searchText.value = val
+  if (!val) { searchMode.value = false; emit('load-files'); return }
+  emit('update:filePath', val)
+}
+
+function doSearch() {
+  if (searchText.value) {
+    searchMode.value = true
+    lastQuery.value = searchText.value
+    emit('search', searchText.value)
+  } else {
+    searchMode.value = false
+    emit('load-files')
+  }
+}
+
+function doClear() {
+  searchText.value = ''
+  searchMode.value = false
+  emit('load-files')
+}
 
 function formatDuration(sec) {
   if (!sec) return ''

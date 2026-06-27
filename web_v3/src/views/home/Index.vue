@@ -13,6 +13,7 @@
         @go-up="goUpDir"
         @update:checked-keys="(v) => checkedKeys = v"
         @row-click="onRowClick"
+        @search="onSearch"
       />
     </div>
 
@@ -137,6 +138,22 @@ async function loadFiles() {
   } catch { message.error('加载文件失败') }
 }
 
+async function onSearch(query) {
+  try {
+    const res = await api.searchMusic({ query })
+    if (res.data) {
+      musicList.value = res.data.map((f) => ({
+        name: f.name,
+        size: f.size,
+        update_time: '',
+        file_path: f.file_path,
+        full_path: f.full_path,
+      }))
+      startBatchLoad(res.data.map((f) => f.name))
+    }
+  } catch { message.error('搜索失败') }
+}
+
 function flattenTree(nodes) {
   const files = []
   nodes.forEach((node) => {
@@ -189,8 +206,9 @@ function goUpDir() {
 async function onRowClick(row) {
   selectedKey.value = row.name
   loadingMeta.value = true
+  const dirPath = row.file_path || filePath.value
   try {
-    const res = await api.musicId3({ file_path: filePath.value, file_name: row.name })
+    const res = await api.musicId3({ file_path: dirPath, file_name: row.name })
     if (res.data) {
       editing.value = { ...res.data, is_save_lyrics_file: false, is_save_album_cover: false }
       currentFileName = row.name

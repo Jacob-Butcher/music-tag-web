@@ -1,9 +1,11 @@
 import base64
 import copy
 import os
+import pathlib
 import threading
 import time
 
+from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.gzip import gzip_page
 from rest_framework import mixins
@@ -14,7 +16,7 @@ from applications.task.filters import TaskFilters
 from applications.task.models import TaskRecord, Task
 from applications.task.serialziers import BatchMusicId3Serializer, FileListSerializer, Id3Serializer, \
     UpdateId3Serializer, FetchId3ByTitleSerializer, FetchLlyricSerializer, BatchUpdateId3Serializer, \
-    TranslationLycSerializer, TidyFolderSerializer, TaskSerializer, UploadImageSerializer
+    TranslationLycSerializer, TidyFolderSerializer, TaskSerializer, UploadImageSerializer, SearchMusicSerializer
 from applications.task.services.music_ids import MusicIDS
 from applications.task.services.music_resource import MusicResource
 from applications.task.services.update_ids import update_music_info
@@ -46,6 +48,8 @@ class TaskViewSets(GenericViewSet):
             return TidyFolderSerializer
         elif self.action == "upload_image":
             return UploadImageSerializer
+        elif self.action == "search_music":
+            return SearchMusicSerializer
         return FileListSerializer
 
     @action(methods=['POST'], detail=False)
@@ -319,6 +323,28 @@ class TaskViewSets(GenericViewSet):
         bs64_img = base64.b64encode(upload_file.read()).decode()
         # bs64_img_str = "data:image/jpeg;base64," + bs64_img
         return self.success_response(data=bs64_img)
+
+    @action(methods=['POST'], detail=False)
+    def search_music(self, request, *args, **kwargs):
+        """搜索歌曲（按文件名模糊匹配）"""
+        validate_data = self.is_validated_data(request.data)
+        query = validate_data['query']
+        media_root = os.path.join(settings.MEDIA_ROOT, "music") if os.path.isdir(os.path.join(settings.MEDIA_ROOT, "music")) else settings.MEDIA_ROOT
+        results = []
+        try:
+            for entry in pathlib.Path(media_root).rglob(f"*{query}*"):
+                if entry.is_file():
+                    suffix = entry.suffix.lower().lstrip(".")
+                    if suffix in ALLOW_TYPE:
+                        results.append({
+                            "name": entry.name,
+                            "file_path": str(entry.parent),
+                            "full_path": str(entry),
+                            "size": entry.stat().st_size,
+                        })
+        except Exception:
+            pass
+        return self.success_response(data=results[:100])
 
     @action(methods=["get"], detail=False)
     def clear_celery(self, request, *args, **kwargs):
