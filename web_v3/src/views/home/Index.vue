@@ -24,7 +24,7 @@
         @save-tag="saveTag"
         @batch-save="batchSave"
         @show-batch-auto="showBatchAuto = true"
-        @show-progress="taskCollapsed = false"
+        @show-progress="showTaskPanel = true"
         @apply-meta="(item, source) => applyOnlineMeta(item, source)"
         @back="mobileView = 'file'"
       />
@@ -44,20 +44,20 @@
       </template>
     </n-modal>
 
-    <!-- Floating task panel (top-right) -->
-    <div v-if="taskModal.items.length" class="task-panel" :class="{ collapsed: taskCollapsed }">
-      <div class="task-panel-header" @click="taskCollapsed = !taskCollapsed">
-        <span>刮削进度</span>
-        <span style="font-size:11px;">
-          ✓<b style="color:#18a058">{{ taskModal.success }}</b>
-          ✗<b style="color:#d03050">{{ taskModal.failed }}</b>
-          <span v-if="taskModal.pending">···{{ taskModal.pending }}</span>
-        </span>
-        <n-button text size="tiny" @click.stop="taskModal.items = []">✕</n-button>
+    <!-- Task history button + panel (top-right) -->
+    <n-button v-if="taskModal.items.length || taskPollTimer" size="small" round style="position:fixed;top:8px;right:8px;z-index:200;" @click="showTaskPanel = !showTaskPanel">
+      <template #icon><n-icon size="16"><TimeOutline /></n-icon></template>
+      刮削 {{ taskModal.success }}/{{ taskModal.total }}
+      <span v-if="taskModal.pending"> ({{ taskModal.pending }})</span>
+    </n-button>
+    <div v-if="showTaskPanel && taskModal.items.length" class="task-panel">
+      <div class="task-panel-header">
+        <span>刮削记录</span>
+        <n-button text size="tiny" @click="showTaskPanel = false">✕</n-button>
       </div>
-      <div v-if="!taskCollapsed" style="max-height:260px;overflow:auto;">
-        <div v-for="t in taskModal.items" :key="t.full_path" style="display:flex;align-items:center;padding:3px 8px;font-size:11px;border-bottom:1px solid #f5f5f5;">
-          <span :style="{color: t.state==='success'?'#18a058':t.state==='failed'?'#d03050':'#999',width:'16px'}">{{ t.state==='success'?'✓':t.state==='failed'?'✗':'·' }}</span>
+      <div style="max-height:280px;overflow:auto;">
+        <div v-for="t in taskModal.items" :key="t.full_path" style="display:flex;align-items:center;padding:3px 10px;font-size:11px;border-bottom:1px solid #f5f5f5;">
+          <span :style="{color: t.state==='success'?'#18a058':t.state==='failed'?'#d03050':'#999',width:'16px',flexShrink:0}">{{ t.state==='success'?'✓':t.state==='failed'?'✗':'·' }}</span>
           <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.song_name || t.filename || '' }}</span>
           <span v-if="t.message" style="color:#d03050;font-size:10px;margin-left:4px;">{{ t.message }}</span>
         </div>
@@ -68,21 +68,21 @@
 
 <style scoped>
 .task-panel {
-  position: fixed; top: 8px; right: 8px; width: 280px; z-index: 200;
+  position: fixed; top: 40px; right: 8px; width: 280px; z-index: 200;
   background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
   border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
   font-size: 12px; border: 1px solid #e8e8ed;
 }
 .task-panel-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 10px; cursor: pointer; font-weight: 500; gap: 8px;
+  padding: 8px 10px; font-weight: 500;
 }
-.task-panel.collapsed .task-panel-header { border-bottom: none; }
 </style>
 
 <script setup>
 import { h, ref, computed, onBeforeUnmount } from 'vue'
 import { useMessage } from 'naive-ui'
+import { TimeOutline } from '@vicons/ionicons5'
 import api from '@/api'
 import { useMobile } from '@/composables/useMobile'
 import FileBrowser from '@/components/home/FileBrowser.vue'
@@ -105,8 +105,9 @@ const batchMode = ref('hard')
 const batchSources = ref([])
 const taskModal = ref({ show: false, total: 0, success: 0, failed: 0, pending: 0, items: [] })
 const taskPaths = ref([])
-const taskCollapsed = ref(false)
+const showTaskPanel = ref(false)
 let taskPollTimer = null
+let taskPollStart = 0
 let currentFileName = ''
 let currentFileFullPath = ''
 
@@ -284,6 +285,8 @@ function doBatchAuto() {
     .filter((m) => checkedKeys.value.includes(m.name))
     .map((m) => filePath.value.replace(/\/$/, '') + '/' + m.name)
   taskModal.value = { show: true, total: selectData.length, success: 0, failed: 0, pending: selectData.length, items: [] }
+  showTaskPanel.value = true
+  taskPollStart = Date.now()
   startTaskPoll()
 }
 
@@ -305,7 +308,13 @@ function startTaskPoll() {
         if (pending === 0 && total > 0) {
           clearInterval(taskPollTimer)
           taskPollTimer = null
-          message.success('刮削完成')
+          message.success(`刮削完成: ${success} 成功, ${failed} 失败`)
+        }
+        // Timeout after 5 minutes
+        if (Date.now() - taskPollStart > 300000) {
+          clearInterval(taskPollTimer)
+          taskPollTimer = null
+          if (pending > 0) message.warning('刮削超时，部分文件未处理')
         }
       }
     } catch { /* ignore poll errors */ }

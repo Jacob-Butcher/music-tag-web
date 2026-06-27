@@ -266,9 +266,9 @@ def batch_auto_tag_task(batch, source_list, select_mode):
             try:
                 is_match = match_song(resource, task.full_path, select_mode)
             except Exception as e:
-                print(e)
+                print(f"匹配失败 {resource}: {e}")
                 is_match = False
-                break
+                continue
             if is_match:
                 task.state = "success"
                 task.save()
