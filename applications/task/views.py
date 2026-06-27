@@ -255,7 +255,10 @@ class TaskViewSets(GenericViewSet):
             title = full_path
         elif resource == "smart_tag":
             title = {"title": title, "full_path": full_path}
-        songs = MusicResource(resource).fetch_id3_by_title(title)
+        try:
+            songs = MusicResource(resource).fetch_id3_by_title(title)
+        except Exception as e:
+            return self.failure_response(msg=str(e))
         return self.success_response(data=songs)
 
     @action(methods=['POST'], detail=False)

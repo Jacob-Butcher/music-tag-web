@@ -43,7 +43,7 @@ class MusicResource:
             return self.resource.fetch_id3_by_title(title)
         except Exception as e:
             print("音乐平台搜索失败", e)
-            return []
+            raise Exception(f"{self.resource.__class__.__name__} 搜索失败: {e}")
 
 
 class NetEaseMusicClient:
@@ -55,12 +55,16 @@ class NetEaseMusicClient:
         return data.json().get("lrc", {}).get("lyric")
 
     def fetch_id3_by_title(self, title):
-        data = send({'s': title, 'type': '1', 'limit': '10', 'offset': '0'}).POST("weapi/cloudsearch/get/web")
+        resp = send({'s': title, 'type': '1', 'limit': '10', 'offset': '0'}).POST("weapi/cloudsearch/get/web")
+        if resp.status_code != 200:
+            raise Exception(f"网易云API返回 {resp.status_code}: {resp.text[:200]}")
         try:
-            songs = data.json().get("result", {}).get("songs", [])
+            body = resp.json()
         except Exception as e:
-            print("网易云音乐搜索失败", e, data.text)
-            songs = []
+            raise Exception(f"网易云响应非JSON: {resp.text[:200]}")
+        if "result" not in body:
+            raise Exception(f"网易云返回异常: {str(body)[:200]}")
+        songs = body.get("result", {}).get("songs", [])
         for song in songs:
             artists = song.get("ar", [])
             album = song.get("al", {})
