@@ -96,6 +96,7 @@ const showBatchAuto = ref(false)
 const batchMode = ref('hard')
 const batchSources = ref([])
 const taskModal = ref({ show: false, total: 0, success: 0, failed: 0, pending: 0, items: [] })
+const taskPaths = ref([])
 let taskPollTimer = null
 let currentFileName = ''
 let currentFileFullPath = ''
@@ -269,7 +270,10 @@ function doBatchAuto() {
     .map((m) => ({ name: m.name, icon: 'icon-script-file' }))
   api.batchAutoUpdateId3({ file_full_path: filePath.value, select_data: selectData, music_info: { select_mode: batchMode.value, source_list: batchSources.value } })
   showBatchAuto.value = false
-  // Open progress modal and start polling
+  // Store selected paths and start polling
+  taskPaths.value = musicList.value
+    .filter((m) => checkedKeys.value.includes(m.name))
+    .map((m) => m.full_path || (filePath.value.replace(/\/$/, '') + '/' + m.name))
   taskModal.value = { show: true, total: selectData.length, success: 0, failed: 0, pending: selectData.length, items: [] }
   startTaskPoll()
 }
@@ -278,15 +282,17 @@ function startTaskPoll() {
   if (taskPollTimer) clearInterval(taskPollTimer)
   taskPollTimer = setInterval(async () => {
     try {
-      const res = await api.getRecord({ parent_path: filePath.value.replace(/\/$/, '') })
+      const res = await api.getRecord({ full_path: filePath.value.replace(/\/$/, '') })
       if (res.data) {
-        const items = Array.isArray(res.data) ? res.data : (res.data.results || [])
+        let items = Array.isArray(res.data) ? res.data : (res.data.results || [])
+        // Filter to only selected files
+        const pathSet = new Set(taskPaths.value)
+        items = items.filter((t) => pathSet.has(t.full_path))
         const success = items.filter((t) => t.state === 'success').length
         const failed = items.filter((t) => t.state === 'failed' || t.state === 'error').length
-        const total = items.length || taskModal.value.total
+        const total = taskPaths.value.length
         const pending = total - success - failed
         taskModal.value = { ...taskModal.value, items, total, success, failed, pending }
-        // Stop polling when all done
         if (pending === 0 && total > 0) {
           clearInterval(taskPollTimer)
           taskPollTimer = null

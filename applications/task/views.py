@@ -226,12 +226,16 @@ class TaskViewSets(GenericViewSet):
                 "batch": timestamp
             }))
         TaskRecord.objects.bulk_create(bulk_set, batch_size=500)
-        threading.Thread(
-            target=batch_auto_tag_task,
-            args=(timestamp, source_list, select_mode),
-            daemon=True,
-        ).start()
-        return self.success_response()
+        def run_batch():
+            from django.db import connections
+            connections.close_all()
+            try:
+                batch_auto_tag_task(timestamp, source_list, select_mode)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+        threading.Thread(target=run_batch, daemon=True).start()
+        return self.success_response(data={"batch": timestamp})
 
     @action(methods=['POST'], detail=False)
     def fetch_lyric(self, request, *args, **kwargs):
