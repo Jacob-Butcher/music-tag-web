@@ -3,14 +3,8 @@
     <!-- File Browser -->
     <div v-show="!isMobile || mobileView === 'file'" :style="panelStyle('1')">
       <FileBrowser
-        :file-path="filePath"
         :music-list="musicList"
         :checked-keys="checkedKeys"
-        :selected-key="selectedKey"
-        :loading-meta="loadingMeta"
-        @update:file-path="(v) => filePath = v"
-        @load-files="loadFiles"
-        @go-up="goUpDir"
         @update:checked-keys="(v) => checkedKeys = v"
         @row-click="onRowClick"
         @search="onSearch"
@@ -196,14 +190,6 @@ async function startBatchLoad(fileNames) {
   loadNextBatch()
 }
 
-function goUpDir() {
-  const parts = filePath.value.replace(/\/$/, '').split('/')
-  parts.pop()
-  filePath.value = parts.join('/') || '/'
-  if (batchTimer) clearTimeout(batchTimer)
-  loadFiles()
-}
-
 // -- Click file → load ID3 for single file --
 async function onRowClick(row) {
   selectedKey.value = row.name
@@ -311,6 +297,4 @@ const taskColumns = [
 onBeforeUnmount(() => {
   if (taskPollTimer) clearInterval(taskPollTimer)
 })
-
-loadFiles()
 </script>

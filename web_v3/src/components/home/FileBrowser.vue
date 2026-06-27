@@ -2,15 +2,11 @@
   <n-card :bordered="false" size="small" style="border-radius: 12px; height: 100%;">
     <n-space vertical :size="8">
       <n-space :size="4" align="center">
-        <n-button text @click="$emit('go-up')" :disabled="filePath === '/'">
-          <n-icon size="20"><ArrowUndo /></n-icon>
-        </n-button>
         <n-input
-          :value="searchText"
+          v-model:value="searchText"
           size="small"
           placeholder="搜索歌曲"
           clearable
-          @update:value="onInput"
           @keyup.enter="doSearch"
           @clear="doClear"
         />
@@ -18,8 +14,7 @@
           <n-icon size="20"><Search /></n-icon>
         </n-button>
       </n-space>
-      <div v-if="searchMode" style="font-size:12px;color:#999;">搜索结果: "{{ lastQuery }}" · {{ musicList.length }} 首</div>
-      <div v-else style="font-size:12px;color:#999;">{{ filePath }}</div>
+      <div v-if="searchMode" style="font-size:12px;color:#999;">"{{ lastQuery }}" · {{ musicList.length }} 首</div>
 
       <n-data-table
         v-if="musicList.length"
@@ -36,7 +31,7 @@
 
       <div v-else style="padding: 40px; text-align: center; color: #999;">
         <n-icon size="40"><FolderOpenOutline /></n-icon>
-        <p>点击上方输入文件夹路径</p>
+        <p>搜索歌曲查看标签信息</p>
       </div>
     </n-space>
   </n-card>
@@ -45,41 +40,30 @@
 <script setup>
 import { h, ref } from 'vue'
 import { NImage } from 'naive-ui'
-import { ArrowUndo, Search, FolderOpenOutline } from '@vicons/ionicons5'
+import { Search, FolderOpenOutline } from '@vicons/ionicons5'
 
 defineProps({
-  filePath: { type: String, required: true },
   musicList: { type: Array, default: () => [] },
   checkedKeys: { type: Array, default: () => [] },
 })
 
-const emit = defineEmits(['update:filePath', 'load-files', 'go-up', 'update:checkedKeys', 'row-click', 'search'])
+const emit = defineEmits(['update:checkedKeys', 'row-click', 'search'])
 
 const searchText = ref('')
 const searchMode = ref(false)
 const lastQuery = ref('')
-
-function onInput(val) {
-  searchText.value = val
-  if (!val) { searchMode.value = false; emit('load-files'); return }
-  emit('update:filePath', val)
-}
 
 function doSearch() {
   if (searchText.value) {
     searchMode.value = true
     lastQuery.value = searchText.value
     emit('search', searchText.value)
-  } else {
-    searchMode.value = false
-    emit('load-files')
   }
 }
 
 function doClear() {
   searchText.value = ''
   searchMode.value = false
-  emit('load-files')
 }
 
 function formatDuration(sec) {
