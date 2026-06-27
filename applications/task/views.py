@@ -228,26 +228,21 @@ class TaskViewSets(GenericViewSet):
         TaskRecord.objects.bulk_create(bulk_set, batch_size=500)
         BatchTask.objects.create(batch_id=timestamp, status="running", total=len(bulk_set))
         def run_batch():
-            from django.db import connections
-            connections.close_all()
             try:
                 batch_auto_tag_task(timestamp, source_list, select_mode)
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-            finally:
-                try:
-                    connections.close_all()
-                    records = TaskRecord.objects.filter(batch=timestamp)
-                    bt = BatchTask.objects.get(batch_id=timestamp)
-                    bt.success = records.filter(state="success").count()
-                    bt.failed = records.filter(state="failed").count()
-                    bt.status = "done"
-                    bt.save()
-                except Exception as e:
-                    import traceback
-                    print("BatchTask update failed:")
-                    traceback.print_exc()
+            try:
+                records = TaskRecord.objects.filter(batch=timestamp)
+                bt = BatchTask.objects.get(batch_id=timestamp)
+                bt.success = records.filter(state="success").count()
+                bt.failed = records.filter(state="failed").count()
+                bt.status = "done"
+                bt.save()
+            except Exception:
+                import traceback
+                traceback.print_exc()
         threading.Thread(target=run_batch, daemon=True).start()
         return self.success_response(data={"batch": timestamp})
 
