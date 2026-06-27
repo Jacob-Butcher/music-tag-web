@@ -22,3 +22,13 @@ class TaskRecord(models.Model):
     extra = models.TextField(default="")
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     batch = models.CharField(max_length=255, default="")
+
+
+class BatchTask(models.Model):
+    batch_id = models.CharField(max_length=255, unique=True)
+    status = models.CharField(max_length=32, default="running")  # running / done
+    total = models.IntegerField(default=0)
+    success = models.IntegerField(default=0)
+    failed = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

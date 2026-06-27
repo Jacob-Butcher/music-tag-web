@@ -2,7 +2,7 @@ import os.path
 
 from rest_framework import serializers
 
-from applications.task.models import TaskRecord, Task
+from applications.task.models import BatchTask, TaskRecord, Task
 
 
 class FileListSerializer(serializers.Serializer):
@@ -103,3 +103,9 @@ class TaskSerializer(serializers.ModelSerializer):
 
 class UploadImageSerializer(serializers.Serializer):
     upload_file = serializers.ImageField(required=True)
+
+
+class BatchTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BatchTask
+        fields = "__all__"

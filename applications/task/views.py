@@ -13,9 +13,9 @@ from rest_framework.decorators import action
 
 from applications.task.constants import ALLOW_TYPE
 from applications.task.filters import TaskFilters
-from applications.task.models import TaskRecord, Task
-from applications.task.serialziers import BatchMusicId3Serializer, FileListSerializer, Id3Serializer, \
-    UpdateId3Serializer, FetchId3ByTitleSerializer, FetchLlyricSerializer, BatchUpdateId3Serializer, \
+from applications.task.models import BatchTask, TaskRecord, Task
+from applications.task.serialziers import BatchMusicId3Serializer, BatchTaskSerializer, FileListSerializer, \
+    Id3Serializer, UpdateId3Serializer, FetchId3ByTitleSerializer, FetchLlyricSerializer, BatchUpdateId3Serializer, \
     TranslationLycSerializer, TidyFolderSerializer, TaskSerializer, UploadImageSerializer, SearchMusicSerializer
 from applications.task.services.music_ids import MusicIDS
 from applications.task.services.music_resource import MusicResource
@@ -226,6 +226,7 @@ class TaskViewSets(GenericViewSet):
                 "batch": timestamp
             }))
         TaskRecord.objects.bulk_create(bulk_set, batch_size=500)
+        BatchTask.objects.create(batch_id=timestamp, status="running", total=len(bulk_set))
         def run_batch():
             from django.db import connections
             connections.close_all()
@@ -234,6 +235,18 @@ class TaskViewSets(GenericViewSet):
             except Exception as e:
                 import traceback
                 traceback.print_exc()
+            finally:
+                # Update BatchTask status
+                try:
+                    connections.close_all()
+                    tasks = Task.objects.filter(full_path__in=[t.full_path for t in TaskRecord.objects.filter(batch=timestamp)])
+                    bt = BatchTask.objects.get(batch_id=timestamp)
+                    bt.success = tasks.filter(state="success").count()
+                    bt.failed = TaskRecord.objects.filter(batch=timestamp, state="failed").count()
+                    bt.status = "done"
+                    bt.save()
+                except Exception:
+                    pass
         threading.Thread(target=run_batch, daemon=True).start()
         return self.success_response(data={"batch": timestamp})
 
@@ -382,3 +395,9 @@ class TaskModelViewSets(mixins.ListModelMixin,
     queryset = Task.objects.order_by("-id")
     serializer_class = TaskSerializer
     filterset_class = TaskFilters
+
+
+class BatchTaskViewSet(mixins.ListModelMixin, GenericViewSet):
+    queryset = BatchTask.objects.order_by("-id")
+    serializer_class = BatchTaskSerializer
+    pagination_class = None

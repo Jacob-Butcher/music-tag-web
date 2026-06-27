@@ -20,7 +20,7 @@
         :editing="editing"
         :manual-edit="manualEdit"
         :saving="saving"
-        :task-info="taskModal"
+        :task-info="{ items: runningBatch ? [{ name: runningBatch.batch_id }] : [], success: runningBatch?.success || 0, total: runningBatch?.total || 0, failed: runningBatch?.failed || 0 }"
         @save-tag="saveTag"
         @batch-save="batchSave"
         @show-batch-auto="showBatchAuto = true"
@@ -44,23 +44,27 @@
       </template>
     </n-modal>
 
-    <!-- Task history button + panel (top-right) -->
-    <n-button v-if="taskModal.items.length || taskPollTimer" size="small" round style="position:fixed;top:8px;right:8px;z-index:200;" @click="showTaskPanel = !showTaskPanel">
+    <!-- Operation history (top-right) -->
+    <n-button v-if="batchHistory.length || batchPollTimer" size="small" round style="position:fixed;top:8px;right:8px;z-index:200;" @click="showTaskPanel = !showTaskPanel">
       <template #icon><n-icon size="16"><TimeOutline /></n-icon></template>
-      刮削 {{ taskModal.success }}/{{ taskModal.total }}
-      <span v-if="taskModal.pending"> ({{ taskModal.pending }})</span>
+      操作记录
+      <span v-if="runningBatch" style="color:#f0a020"> ···{{ runningBatch.total - runningBatch.success - runningBatch.failed }}</span>
     </n-button>
-    <div v-if="showTaskPanel && taskModal.items.length" class="task-panel">
+    <div v-if="showTaskPanel" class="task-panel">
       <div class="task-panel-header">
-        <span>刮削记录</span>
+        <span>操作记录</span>
         <n-button text size="tiny" @click="showTaskPanel = false">✕</n-button>
       </div>
-      <div style="max-height:280px;overflow:auto;">
-        <div v-for="t in taskModal.items" :key="t.full_path" style="display:flex;align-items:center;padding:3px 10px;font-size:11px;border-bottom:1px solid #f5f5f5;">
-          <span :style="{color: t.state==='success'?'#18a058':t.state==='failed'?'#d03050':'#999',width:'16px',flexShrink:0}">{{ t.state==='success'?'✓':t.state==='failed'?'✗':'·' }}</span>
-          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.song_name || t.filename || '' }}</span>
-          <span v-if="t.message" style="color:#d03050;font-size:10px;margin-left:4px;">{{ t.message }}</span>
+      <div v-if="!batchHistory.length" style="padding:16px;text-align:center;color:#999;font-size:12px;">暂无记录</div>
+      <div v-for="bt in batchHistory" :key="bt.batch_id" style="padding:8px 10px;border-bottom:1px solid #f5f5f5;font-size:11px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span>批量刮削</span>
+          <span :style="{color: bt.status==='done'?(bt.failed?'#f0a020':'#18a058'):'#f0a020',fontWeight:500}">
+            {{ bt.status==='done'?'完成':'进行中' }} {{ bt.success }}/{{ bt.total }}
+            <span v-if="bt.failed" style="color:#d03050"> {{ bt.failed }}✗</span>
+          </span>
         </div>
+        <div style="color:#999;margin-top:2px;">{{ bt.created_at }}</div>
       </div>
     </div>
   </div>
@@ -68,15 +72,12 @@
 
 <style scoped>
 .task-panel {
-  position: fixed; top: 40px; right: 8px; width: 280px; z-index: 200;
+  position: fixed; top: 40px; right: 8px; width: 260px; z-index: 200;
   background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
-  border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-  font-size: 12px; border: 1px solid #e8e8ed;
+  border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); font-size: 12px;
+  border: 1px solid #e8e8ed; max-height: 360px; overflow: auto;
 }
-.task-panel-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 10px; font-weight: 500;
-}
+.task-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; font-weight: 500; }
 </style>
 
 <script setup>
@@ -103,13 +104,9 @@ const loadingMeta = ref(false)
 const showBatchAuto = ref(false)
 const batchMode = ref('hard')
 const batchSources = ref([])
-const taskModal = ref({ show: false, total: 0, success: 0, failed: 0, pending: 0, items: [] })
-const taskPaths = ref([])
+const batchHistory = ref([])
 const showTaskPanel = ref(false)
-let taskPollTimer = null
-let taskPollStart = 0
-let pollErrors = 0
-let pollCount = 0
+let batchPollTimer = null
 let currentFileName = ''
 let currentFileFullPath = ''
 
@@ -276,67 +273,39 @@ async function applyOnlineMeta(item, source) {
   message.success('已应用在线元数据')
 }
 
+const runningBatch = computed(() => batchHistory.value.find((b) => b.status === 'running'))
+
 function doBatchAuto() {
   const selectData = musicList.value
     .filter((m) => checkedKeys.value.includes(m.name))
     .map((m) => ({ name: m.name, icon: 'icon-script-file' }))
   api.batchAutoUpdateId3({ file_full_path: filePath.value, select_data: selectData, music_info: { select_mode: batchMode.value, source_list: batchSources.value } })
   showBatchAuto.value = false
-  // Store selected paths and start polling
-  taskPaths.value = musicList.value
-    .filter((m) => checkedKeys.value.includes(m.name))
-    .map((m) => filePath.value.replace(/\/$/, '') + '/' + m.name)
-  taskModal.value = { show: true, total: selectData.length, success: 0, failed: 0, pending: selectData.length, items: [] }
   showTaskPanel.value = true
-  taskPollStart = Date.now()
-  startTaskPoll()
+  loadBatchHistory()
+  // Poll for updates while task is running
+  if (batchPollTimer) clearInterval(batchPollTimer)
+  batchPollTimer = setInterval(loadBatchHistory, 3000)
 }
 
-function startTaskPoll() {
-  pollErrors = 0; pollCount = 0
-  if (taskPollTimer) clearInterval(taskPollTimer)
-  taskPollTimer = setInterval(async () => {
-    pollCount++
-    try {
-      const res = await api.getRecord({ full_path: filePath.value.replace(/\/$/, '') })
-      if (res.data) {
-        pollErrors = 0
-        let items = Array.isArray(res.data) ? res.data : (res.data.results || [])
-        // Filter to only selected files
-        const pathSet = new Set(taskPaths.value)
-        items = items.filter((t) => pathSet.has(t.full_path))
-        const success = items.filter((t) => t.state === 'success').length
-        const failed = items.filter((t) => t.state === 'failed' || t.state === 'error').length
-        const total = taskPaths.value.length
-        const pending = total - success - failed
-        taskModal.value = { ...taskModal.value, items, total, success, failed, pending }
-        if (pending === 0 && total > 0) {
-          clearInterval(taskPollTimer)
-          taskPollTimer = null
-          message.success(`刮削完成: ${success} 成功, ${failed} 失败`)
-        }
-        // Stop if no results after 10 polls
-        if (pollCount > 10 && !items.length) {
-          clearInterval(taskPollTimer); taskPollTimer = null
-          message.warning('刮削任务未创建，请检查文件路径')
-        }
-        // Timeout after 5 minutes
-        if (Date.now() - taskPollStart > 300000) {
-          clearInterval(taskPollTimer)
-          taskPollTimer = null
-          if (pending > 0) message.warning('刮削超时，部分文件未处理')
-        }
+async function loadBatchHistory() {
+  try {
+    const res = await api.getBatchTasks()
+    if (res.data) {
+      batchHistory.value = (Array.isArray(res.data) ? res.data : (res.data.results || [])).slice(0, 20)
+      // Stop polling when no running tasks
+      if (!runningBatch.value && batchPollTimer) {
+        clearInterval(batchPollTimer)
+        batchPollTimer = null
       }
-    } catch {
-      pollErrors++
-      if (pollErrors > 5) { clearInterval(taskPollTimer); taskPollTimer = null; message.error('刮削进度查询失败') }
     }
-  }, 2000)
+  } catch { /* ignore */ }
 }
 
 onBeforeUnmount(() => {
-  if (taskPollTimer) clearInterval(taskPollTimer)
+  if (batchPollTimer) clearInterval(batchPollTimer)
 })
 
 loadFiles()
+loadBatchHistory()
 </script>

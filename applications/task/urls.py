@@ -5,4 +5,5 @@ from . import views
 router = routers.DefaultRouter()
 router.register(r"", views.TaskViewSets, basename='task')
 router.register(r"record", views.TaskModelViewSets, basename='record')
+router.register(r"batch_tasks", views.BatchTaskViewSet, basename='batch_tasks')
 

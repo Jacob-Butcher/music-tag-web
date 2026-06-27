@@ -36,4 +36,5 @@ export default {
   translationLyc: (params) => POST('/api/translation_lyc/', params),
   uploadImage: (params) => POST('/api/upload_image/', params),
   getRecord: (params) => GET('/api/record/', params),
+  getBatchTasks: (params) => GET('/api/batch_tasks/', params),
 }
