@@ -24,7 +24,7 @@
         @batch-save="batchSave"
         @show-batch-auto="showBatchAuto = true"
         @show-progress="taskModal.show = true"
-        @apply-meta="applyOnlineMeta"
+        @apply-meta="(item, source) => applyOnlineMeta(item, source)"
         @back="mobileView = 'file'"
       />
     </div>
@@ -238,13 +238,21 @@ async function batchSave() {
   } catch { message.error('修改失败') }
 }
 
-function applyOnlineMeta(item) {
+async function applyOnlineMeta(item, source) {
   editing.value.title = item.name || editing.value.title
   editing.value.artist = item.artist || editing.value.artist
   editing.value.album = item.album || editing.value.album
   editing.value.year = item.year || editing.value.year
   editing.value.artwork = item.album_img || editing.value.artwork
   editing.value.album_img = item.album_img || editing.value.album_img
+  // Fetch lyrics from the same source
+  const songId = item.id || item.rid
+  if (songId && source) {
+    try {
+      const lrcRes = await api.fetchLyric({ resource: source, song_id: String(songId) })
+      if (lrcRes.data) editing.value.lyrics = lrcRes.data
+    } catch { /* ignore */ }
+  }
   message.success('已应用在线元数据')
 }
 

@@ -41,7 +41,7 @@
             style="display:flex;align-items:center;padding:6px 8px;cursor:pointer;border-bottom:1px solid #f5f5f5;"
             :style="{ background: hoverIdx === i ? '#f5f5f7' : '' }"
             @mouseenter="hoverIdx = i" @mouseleave="hoverIdx = -1"
-            @click="!item._err && $emit('apply-meta', item); !item._err && (searchResults = [])">
+            @click="!item._err && $emit('apply-meta', item, searchSource); !item._err && (searchResults = [])">
             <n-image v-if="item.album_img" :src="item.album_img" width="36" height="36" style="border-radius:4px;margin-right:8px;" preview-disabled />
             <div style="flex:1;overflow:hidden;">
               <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ item.name }}</div>
