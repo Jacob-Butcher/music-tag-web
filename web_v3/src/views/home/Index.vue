@@ -44,11 +44,37 @@
         <n-button type="primary" round block @click="doBatchAuto">开始刮削</n-button>
       </template>
     </n-modal>
+
+    <!-- Task progress modal -->
+    <n-modal v-model:show="taskModal.show" title="刮削进度" preset="card" style="width: 480px; max-height: 70vh;">
+      <n-space v-if="taskModal.total" vertical :size="12">
+        <div style="display:flex;gap:24px;font-size:13px;">
+          <span>总数: <b>{{ taskModal.total }}</b></span>
+          <span style="color:#18a058;">成功: <b>{{ taskModal.success }}</b></span>
+          <span style="color:#d03050;">失败: <b>{{ taskModal.failed }}</b></span>
+          <span v-if="taskModal.pending" style="color:#999;">处理中: {{ taskModal.pending }}</span>
+        </div>
+        <n-progress
+          type="line"
+          :percentage="taskModal.total ? Math.round((taskModal.success + taskModal.failed) / taskModal.total * 100) : 0"
+          :color="taskModal.failed ? '#f0a020' : '#18a058'"
+        />
+        <n-data-table
+          :columns="taskColumns"
+          :data="taskModal.items"
+          size="small"
+          :row-key="(r) => r.full_path"
+          max-height="300"
+          virtual-scroll
+        />
+      </n-space>
+      <div v-else style="text-align:center;padding:20px;color:#999;">等待任务开始...</div>
+    </n-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { h, ref, computed, onBeforeUnmount } from 'vue'
 import { useMessage } from 'naive-ui'
 import api from '@/api'
 import { useMobile } from '@/composables/useMobile'
@@ -70,6 +96,8 @@ const loadingMeta = ref(false)
 const showBatchAuto = ref(false)
 const batchMode = ref('hard')
 const batchSources = ref([])
+const taskModal = ref({ show: false, total: 0, success: 0, failed: 0, pending: 0, items: [] })
+let taskPollTimer = null
 let currentFileName = ''
 
 const sourceOptions = [
@@ -199,9 +227,50 @@ function doBatchAuto() {
     .filter((m) => checkedKeys.value.includes(m.name))
     .map((m) => ({ name: m.name, icon: 'icon-script-file' }))
   api.batchAutoUpdateId3({ file_full_path: filePath.value, select_data: selectData, music_info: { select_mode: batchMode.value, source_list: batchSources.value } })
-  message.success('任务已创建')
   showBatchAuto.value = false
+  // Open progress modal and start polling
+  taskModal.value = { show: true, total: selectData.length, success: 0, failed: 0, pending: selectData.length, items: [] }
+  startTaskPoll()
 }
+
+function startTaskPoll() {
+  if (taskPollTimer) clearInterval(taskPollTimer)
+  taskPollTimer = setInterval(async () => {
+    try {
+      const res = await api.getRecord({ parent_path: filePath.value })
+      if (res.data) {
+        const items = Array.isArray(res.data) ? res.data : (res.data.results || [])
+        const success = items.filter((t) => t.state === 'success').length
+        const failed = items.filter((t) => t.state === 'failed' || t.state === 'error').length
+        const total = items.length || taskModal.value.total
+        const pending = total - success - failed
+        taskModal.value = { ...taskModal.value, items, total, success, failed, pending }
+        // Stop polling when all done
+        if (pending === 0 && total > 0) {
+          clearInterval(taskPollTimer)
+          taskPollTimer = null
+          message.success('刮削完成')
+        }
+      }
+    } catch { /* ignore poll errors */ }
+  }, 2000)
+}
+
+const taskColumns = [
+  { title: '歌曲', key: 'song_name', ellipsis: { tooltip: true }, width: 150 },
+  {
+    title: '状态', key: 'state', width: 70,
+    render(row) {
+      const map = { success: '✓', failed: '✗' }
+      return h('span', { style: { color: row.state === 'success' ? '#18a058' : row.state === 'failed' ? '#d03050' : '#999' } }, map[row.state] || '...')
+    },
+  },
+  { title: '信息', key: 'message', ellipsis: { tooltip: true }, width: 200 },
+]
+
+onBeforeUnmount(() => {
+  if (taskPollTimer) clearInterval(taskPollTimer)
+})
 
 loadFiles()
 </script>
