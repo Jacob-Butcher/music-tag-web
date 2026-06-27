@@ -1,6 +1,7 @@
 import base64
 import copy
 import os
+import threading
 import time
 
 from django.utils.decorators import method_decorator
@@ -221,7 +222,11 @@ class TaskViewSets(GenericViewSet):
                 "batch": timestamp
             }))
         TaskRecord.objects.bulk_create(bulk_set, batch_size=500)
-        batch_auto_tag_task(timestamp, source_list, select_mode)
+        threading.Thread(
+            target=batch_auto_tag_task,
+            args=(timestamp, source_list, select_mode),
+            daemon=True,
+        ).start()
         return self.success_response()
 
     @action(methods=['POST'], detail=False)
