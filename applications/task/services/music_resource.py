@@ -99,9 +99,16 @@ class MiGuMusicClient:
         return res.json()["lyric"]
 
     def fetch_id3_by_title(self, title):
-        url = self.BASE_URL + f"migu/remoting/scr_search_tag?rows=10&type=2&keyword={title}&pgc=1"
-        res = requests.get(url, headers=self.header)
-        songs = res.json()["musics"]
+        from urllib.parse import quote
+        url = self.BASE_URL + f"migu/remoting/scr_search_tag?rows=10&type=2&keyword={quote(title)}&pgc=1"
+        res = requests.get(url, headers=self.header, timeout=10)
+        if res.status_code != 200:
+            raise Exception(f"咪咕API返回 {res.status_code}")
+        try:
+            body = res.json()
+        except Exception:
+            raise Exception(f"咪咕响应非JSON: {res.text[:200]}")
+        songs = body.get("musics") or []
         for song in songs:
             song["id"] = song['copyrightId']
             song["name"] = song['songName']
