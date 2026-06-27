@@ -222,6 +222,12 @@ async function saveTag() {
       message.error('保存失败: ' + (res.message || JSON.stringify(res)))
     } else {
       message.success('修改成功')
+      // Update table row with saved metadata
+      const idx = musicList.value.findIndex((m) => (m.full_path || (filePath.value.replace(/\/$/, '') + '/' + m.name)) === savePath)
+      if (idx >= 0) {
+        const saved = { ...editing.value, _loaded: true }
+        musicList.value[idx] = { ...musicList.value[idx], title: saved.title, artist: saved.artist, album: saved.album, year: saved.year, artwork: saved.artwork, lyrics: saved.lyrics, _loaded: true }
+      }
       if (isMobile.value) mobileView.value = 'file'
     }
   } catch (e) { message.error('保存失败: ' + (e.message || e)) }
